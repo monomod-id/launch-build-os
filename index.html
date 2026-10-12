@@ -563,11 +563,11 @@ const Emergence = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 9. UI (УПРОЩЁННАЯ ВЕРСИЯ)
+// 9. UI (ЧИСТАЯ ВЕРСИЯ, БЕЗ КНОПОК)
 // ═══════════════════════════════════════════════════════════════
 const canvas = document.getElementById('state-canvas');
 const ctx = canvas.getContext('2d');
-let animState = 'idle', animTime = 0, zoom = 1;
+let animState = 'idle', animTime = 0;
 
 function resizeCanvas() { 
   canvas.width = canvas.parentElement.clientWidth; 
@@ -641,41 +641,49 @@ function logEntry(text, cls) {
 function sendImpulse() {
   try {
     const text = input2.value.trim();
-    logEntry('кнопка нажата, текст: "' + text + '"', 'cmd');
+    logEntry('ввод: "' + text + '"', 'cmd');
     if (!text) {
-      logEntry('пустой ввод', 'err');
+      logEntry('пусто', 'err');
       return;
     }
+    
+    logEntry('вызов Conveyor.process...', 'cmd');
     const result = Conveyor.process(text);
+    logEntry('process завершён', 'cmd');
+    
     if (!result) {
-      logEntry('process вернул null', 'err');
-      answerBox.textContent = 'ошибка';
+      logEntry('result = null', 'err');
       return;
     }
-    answerBox.textContent = result.form;
-    answerMeta.textContent = result.action + ' · ' + result.plane;
-    logEntry('ответ: ' + result.form, 'gold');
+    
+    logEntry('form: ' + result.form, 'cmd');
+    answerBox.textContent = result.form || '—';
+    answerMeta.textContent = (result.action || '') + ' · ' + (result.plane || '');
+    
+    logEntry('ответ записан', 'gold');
     logEntry('смысл: ' + result.meaning, '');
+    
     input2.value = '';
     logEntry('поле очищено', 'cmd');
     updateMetrics();
   } catch(e) {
-    logEntry('ОШИБКА: ' + e.message, 'err');
+    logEntry('ОШИБКА sendImpulse: ' + e.message, 'err');
+    logEntry('stack: ' + (e.stack || '').split('\n').slice(0,3).join(' | '), 'err');
   }
 }
 
 function sendCommand() {
   try {
     const text = input3.value.trim();
-    logEntry('команда: "' + text + '"', 'cmd');
+    logEntry('> ' + text, 'cmd');
     if (!text) return;
     const cmd = text.toLowerCase();
-    if (cmd === 'help') logEntry('команды: status, lineage, fold, apps, clear', 'ok');
+    if (cmd === 'help') logEntry('status, lineage, fold, apps, clear', 'ok');
     else if (cmd === 'status') { 
       logEntry('y=' + Conveyor.state.y.toFixed(3) + ' δ=' + Conveyor.dev().toFixed(3), 'ok'); 
       logEntry('связей: ' + Conveyor.G.data.size, 'ok');
     }
-    else if (cmd === 'lineage') logEntry('поколение: G' + Lineage.current.generation, 'gold');
+    else if (cmd === 'lineage') logEntry('G' + Lineage.current.generation + ' · ' + Lineage.current.source, 'gold');
     else if (cmd === 'fold') { 
       Lineage.fold(); 
       logEntry('свёртка', 'gold'); 
@@ -683,64 +691,75 @@ function sendCommand() {
     }
     else if (cmd === 'apps') logEntry('приложений: ' + Emergence.registry.length, 'gold');
     else if (cmd === 'clear') logBox.innerHTML = '';
-    else logEntry('неизвестная команда', 'err');
+    else logEntry('неизвестная', 'err');
     input3.value = '';
   } catch(e) {
-    logEntry('ОШИБКА: ' + e.message, 'err');
+    logEntry('ОШИБКА sendCommand: ' + e.message, 'err');
   }
 }
 
-// Обработчики Enter
-input2.addEventListener('keydown', e => { if (e.key === 'Enter') sendImpulse(); });
-input3.addEventListener('keydown', e => { if (e.key === 'Enter') sendCommand(); });
+// ДВОЙНОЙ ОБРАБОТЧИК ENTER (для iOS и десктопа)
+input2.addEventListener('keydown', e => { 
+  if (e.key === 'Enter' || e.keyCode === 13) { 
+    e.preventDefault();
+    logEntry('Enter нажат на input2', 'cmd');
+    sendImpulse(); 
+  } 
+});
 
-// Кнопки отправки
-const btn2 = document.createElement('button');
+input3.addEventListener('keydown', e => { 
+  if (e.key === 'Enter' || e.keyCode === 13) { 
+    e.preventDefault();
+    sendCommand(); 
+  } 
+});
 
-const btn2 = document.createElement('button');
-btn2.textContent = 'ОТПРАВИТЬ';
-btn2.textContent = 'ОТПРАВИТЬ';
-btn2.style.cssText = 'margin-top:10btn2.style.cssText = 'margin-top:10px;padding:12px;background:transparent;border:1px;padding:12px;background:transparent;border:1px solid #4dd0c7;color:#4px solid #4dd0c7;color:#4dd0c7;font:inherit;font-size:12dd0c7;font:inherit;font-size:12px;cursor:pointer;border-radius:4px;widthpx;cursor:pointer;border-radius:4px;width:100%';
-btn2.onclick = send:100%';
-btn2.onclick = sendImpulse;
-input2.parentElement.appendChild(btn2);
+// ДОПОЛНИТЕЛЬНО: обработка form submit (на случай если браузер оборачивает input в form)
+input2.addEventListener('keypress', e => {
+  if (e.which === 13) {
+    e.preventDefault();
+    sendImpulse();
+  }
+});
 
-Impulse;
-input2.parentElement.appendChild(btn2);
-
-const btn3 = document.createElement('button');
-btn3const btn3 = document.createElement('button');
-btn3.textContent = 'ВЫПОЛНИТЬ';
-btn.textContent = 'ВЫПОЛНИТЬ';
-btn3.style.cssText = 'margin-top:10px3.style.cssText = 'margin-top:10px;padding:12px;background:transparent;border:1px;padding:12px;background:transparent;border:1px solid #4dd0c7;color:#4 solid #4dd0c7;color:#4dd0c7;font:inherit;font-size:12dd0c7;font:inherit;font-size:12px;cursor:pointer;border-radius:4px;width:1px;cursor:pointer;border-radius:4px;width:100%';
-btn3.onclick = sendCommand;00%';
-btn3.onclick = sendCommand;
-input3.parentElement.appendChild(btn3);
-
-function updateMetrics
-input3.parentElement.appendChild(btn3);
+input3.addEventListener('keypress', e => {
+  if (e.which === 13) {
+    e.preventDefault();
+    sendCommand();
+  }
+});
 
 function updateMetrics() {
-  document.getElementById('s-() {
-  document.getElementById('s-edges').textContent = Conveyor.G.data.size;
-  documentedges').textContent = Conveyor.G.data.size;
-  document.getElementById('l-edges').textContent = Conveyor.G.data.size.getElementById('l-edges').textContent = Conveyor.G.data.size;
-  document.getElementById('t-edges').textContent =;
-  document.getElementById('t-edges').textContent = Conveyor.G.data.size;
-  document.getElementById('s-gen Conveyor.G.data.size;
-  document.getElementById('s-gen').textContent = 'G' + Lineage.current.generation').textContent = 'G' + Lineage.current.generation;
-  document.getElementById('l-gen').textContent = ';
-  document.getElementById('l-gen').textContent = 'G' + Lineage.current.generation;
-  documentG' + Lineage.current.generation;
-  document.getElementById('t-gen').textContent = Lineage.current.generation.getElementById('t-gen').textContent = Lineage.current.generation;
+  try {
+    const sEdges = document.getElementById('s-edges');
+    const lEdges = document.getElementById('l-edges');
+    const tEdges = document.getElementById('t-edges');
+    const sGen = document.getElementById('s-gen');
+    const lGen = document.getElementById('l-gen');
+    const tGen = document.getElementById('t-gen');
+    const tApps = document.getElementById('t-apps');
+    const lVectors = document.getElementById('l-vectors');
+    const klepaMood = document.getElementById('klepa-mood');
+    const klepaEnergy = document.getElementById('klepa-energy');
+    
+    if (sEdges) sEdges.textContent = Conveyor.G.data.size;
+    if (lEdges) lEdges.textContent = Conveyor.G.data.size;
+    if (tEdges) tEdges.textContent = Conveyor.G.data.size;
+    if (sGen) sGen.textContent = 'G' + Lineage.current.generation;
+    if (lGen) lGen.textContent = 'G' + Lineage.current.generation;
+    if (tGen) tGen.textContent = Lineage.current.generation;
+    if (tApps) tApps.textContent = Emergence.registry.length;
+    if (lVectors) lVectors.textContent = Conveyor.G.wordVectors.size;
+    if (klepaMood) klepaMood.textContent = Klepa.state.mood;
+    if (klepaEnergy) klepaEnergy.textContent = Klepa.state.energy.toFixed(2);
+  } catch(e) {
+    logEntry('updateMetrics ошибка: ' + e.message, 'err');
+  }
 }
 
-logEntry('UI и;
-}
-
-logEntry('UI инициализирован', 'cmd');
-logEntryнициализирован', 'cmd');
-logEntry('кнопок создано: 2', 'cmd('кнопок создано: 2', 'cmd');
+logEntry('UI готов', 'cmd');
+logEntry('input2 найден: ' + !!input2, 'cmd');
+logEntry('answerBox найден: ' + !!answerBox, 'cmd');
 
 // ═══════════════════════════════════════════════════════════════
 // 10. ЗАГРУЗКА (BOOT)
