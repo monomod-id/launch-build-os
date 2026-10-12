@@ -562,18 +562,19 @@ const Emergence = {
   }
 };
 
-// ══════════════════════════════════════════════════════════════
-// 9. АНИМАЦИЯ И UI (ИСПРАВЛЕНО)
+// ═══════════════════════════════════════════════════════════════
+// 9. UI (УПРОЩЁННАЯ ВЕРСИЯ)
 // ═══════════════════════════════════════════════════════════════
 const canvas = document.getElementById('state-canvas');
 const ctx = canvas.getContext('2d');
 let animState = 'idle', animTime = 0, zoom = 1;
 
-function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
-resizeCanvas(); window.addEventListener('resize', resizeCanvas);
-
-canvas.addEventListener('touchstart', e => { if (e.touches.length === 2) { const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; canvas._lastDist = Math.sqrt(dx*dx + dy*dy); } });
-canvas.addEventListener('touchmove', e => { if (e.touches.length === 2) { e.preventDefault(); const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; const dist = Math.sqrt(dx*dx + dy*dy); zoom = Math.max(0.5, Math.min(3, zoom + (dist - canvas._lastDist) * 0.01)); canvas._lastDist = dist; } }, { passive: false });
+function resizeCanvas() { 
+  canvas.width = canvas.parentElement.clientWidth; 
+  canvas.height = canvas.parentElement.clientHeight; 
+}
+resizeCanvas(); 
+window.addEventListener('resize', resizeCanvas);
 
 Conveyor.on('state:change', state => { 
   animState = state; 
@@ -585,51 +586,41 @@ function drawState() {
   animTime += 0.016;
   const w = canvas.width, h = canvas.height;
   const cx = w/2, cy = h/2;
-  ctx.fillStyle = 'rgba(5,5,8,0.15)'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(5,5,8,0.15)'; 
+  ctx.fillRect(0, 0, w, h);
   
-  const scale = Math.min(w, h) * 0.35;
-  Conveyor.G.wordVectors.forEach((vec, word) => {
-    const proj = Vector26.project(vec);
-    const x = cx + proj.x * scale; const y = cy + proj.y * scale;
-    ctx.fillStyle = 'rgba(77, 208, 199, 0.2)';
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
-    if (Conveyor.G.data.size > 5) { ctx.fillStyle = 'rgba(200, 200, 212, 0.4)'; ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.fillText(word, x, y - 6); }
-  });
-  
-  Conveyor.G.data.forEach((link, key) => {
-    if (link.w < 0.5) return;
-    const [a, b] = key.split('→');
-    const va = Conveyor.G.wordVectors.get(a), vb = Conveyor.G.wordVectors.get(b);
-    if (!va || !vb) return;
-    const pa = Vector26.project(va), pb = Vector26.project(vb);
-    ctx.strokeStyle = 'rgba(255, 215, 0, ' + (link.w * 0.3) + ')'; ctx.lineWidth = link.w;
-    ctx.beginPath(); ctx.moveTo(cx + pa.x*scale, cy + pa.y*scale); ctx.lineTo(cx + pb.x*scale, cy + pb.y*scale); ctx.stroke();
-  });
-
   let color, radius, alpha;
   switch(animState) {
-    case 'idle': color = '#333'; radius = 40 + Math.sin(animTime)*5; alpha = 0.3; break;
+    case 'idle': color = '#333'; radius = 40; alpha = 0.3; break;
     case 'collecting': color = '#4dd0c7'; radius = 50 + Math.sin(animTime*2)*10; alpha = 0.5; break;
-    case 'processing': color = '#8b5cf6'; radius = 60; alpha = 0.7; ctx.save(); ctx.translate(cx,cy); ctx.rotate(animTime); ctx.translate(-cx,-cy); break;
-    case 'resonance': color = '#ffd700'; radius = 70 + Math.sin(animTime*3)*15; alpha = 0.9; break;
-    case 'rupture': color = '#ff4757'; radius = 30 + Math.sin(animTime*5)*20; alpha = 0.4; break;
+    case 'processing': color = '#8b5cf6'; radius = 60; alpha = 0.7; break;
+    case 'resonance': color = '#ffd700'; radius = 70; alpha = 0.9; break;
+    case 'rupture': color = '#ff4757'; radius = 30; alpha = 0.4; break;
     default: color = '#333'; radius = 40; alpha = 0.3;
   }
-  radius *= zoom;
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius*2);
-  grad.addColorStop(0, color); grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad; ctx.globalAlpha = alpha;
-  ctx.beginPath(); ctx.arc(cx, cy, radius*2, 0, Math.PI*2); ctx.fill();
-  if (animState === 'resonance') { ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(cx, cy, radius+20+Math.sin(animTime*2)*10, 0, Math.PI*2); ctx.stroke(); }
+  grad.addColorStop(0, color); 
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad; 
+  ctx.globalAlpha = alpha;
+  ctx.beginPath(); 
+  ctx.arc(cx, cy, radius*2, 0, Math.PI*2); 
+  ctx.fill();
   ctx.globalAlpha = 1;
-  if (animState === 'processing') ctx.restore();
   requestAnimationFrame(drawState);
 }
+drawState();
 
 const hSlider = document.getElementById('h-slider');
 const dots = document.querySelectorAll('.dot');
-hSlider.addEventListener('scroll', () => { const idx = Math.round(hSlider.scrollLeft / window.innerWidth); dots.forEach((d, i) => d.className = 'dot' + (i === idx ? ' active' : '')); });
-dots.forEach(dot => dot.addEventListener('click', () => { const idx = parseInt(dot.dataset.idx); hSlider.children[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }));
+hSlider.addEventListener('scroll', () => { 
+  const idx = Math.round(hSlider.scrollLeft / window.innerWidth); 
+  dots.forEach((d, i) => d.className = 'dot' + (i === idx ? ' active' : '')); 
+});
+dots.forEach(dot => dot.addEventListener('click', () => { 
+  const idx = parseInt(dot.dataset.idx); 
+  hSlider.children[idx].scrollIntoView({ behavior: 'smooth' }); 
+}));
 
 const input2 = document.getElementById('input-2');
 const input3 = document.getElementById('input-3');
@@ -637,112 +628,119 @@ const answerBox = document.getElementById('answer-box');
 const answerMeta = document.getElementById('answer-meta');
 const logBox = document.getElementById('log-box');
 
-function logEntry(text, cls = '') {
-  const d = document.createElement('div'); if (cls) d.className = cls;
+function logEntry(text, cls) {
+  cls = cls || '';
+  const d = document.createElement('div'); 
+  if (cls) d.className = cls;
   d.textContent = '[' + new Date().toTimeString().slice(0,8) + '] ' + text;
-  logBox.appendChild(d); while (logBox.children.length > 50) logBox.removeChild(logBox.firstChild); logBox.scrollTop = logBox.scrollHeight;
+  logBox.appendChild(d); 
+  while (logBox.children.length > 50) logBox.removeChild(logBox.firstChild); 
+  logBox.scrollTop = logBox.scrollHeight;
 }
 
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ (с визуальной обратной связью)
 function sendImpulse() {
-  const text = input2.value.trim();
-  if (!text) {
-    logEntry('пустой ввод', 'err');
-    return;
+  try {
+    const text = input2.value.trim();
+    logEntry('кнопка нажата, текст: "' + text + '"', 'cmd');
+    if (!text) {
+      logEntry('пустой ввод', 'err');
+      return;
+    }
+    const result = Conveyor.process(text);
+    if (!result) {
+      logEntry('process вернул null', 'err');
+      answerBox.textContent = 'ошибка';
+      return;
+    }
+    answerBox.textContent = result.form;
+    answerMeta.textContent = result.action + ' · ' + result.plane;
+    logEntry('ответ: ' + result.form, 'gold');
+    logEntry('смысл: ' + result.meaning, '');
+    input2.value = '';
+    logEntry('поле очищено', 'cmd');
+    updateMetrics();
+  } catch(e) {
+    logEntry('ОШИБКА: ' + e.message, 'err');
   }
-  
-  logEntry('отправка: "' + text + '"', 'cmd');
-  
-  const result = Conveyor.process(text);
-  if (!result) {
-    logEntry('Conveyor.process вернул null', 'err');
-    answerBox.textContent = 'ошибка обработки';
-    return;
-  }
-  
-  answerBox.textContent = result.form;
-  answerMeta.textContent = result.action + ' · ' + result.plane + (result.klepa ? ' · клепа: ' + result.klepa.text : '');
-  
-  const vInfo = document.getElementById('vector-info');
-  if (result.vector) {
-    vInfo.style.display = 'block';
-    document.getElementById('v-x').textContent = result.vector.x.toFixed(2);
-    document.getElementById('v-y').textContent = result.vector.y.toFixed(2);
-    if (result.hidden && result.hidden.length > 0) document.getElementById('v-hidden').textContent = result.hidden.map(h => h.word + '(' + h.sim.toFixed(2) + ')').join(', ');
-    else document.getElementById('v-hidden').textContent = '—';
-  }
-  
-  logEntry('ответ: ' + result.form, 'gold');
-  logEntry('смысл: ' + result.meaning, '');
-  if (result.klepa) logEntry('клепа: ' + result.klepa.text, 'purple');
-  updateMetrics();
-  
-  input2.value = '';
-  logEntry('ввод очищен', 'cmd');
 }
 
 function sendCommand() {
-  const text = input3.value.trim();
-  if (!text) {
-    logEntry('пустая команда', 'err');
-    return;
+  try {
+    const text = input3.value.trim();
+    logEntry('команда: "' + text + '"', 'cmd');
+    if (!text) return;
+    const cmd = text.toLowerCase();
+    if (cmd === 'help') logEntry('команды: status, lineage, fold, apps, clear', 'ok');
+    else if (cmd === 'status') { 
+      logEntry('y=' + Conveyor.state.y.toFixed(3) + ' δ=' + Conveyor.dev().toFixed(3), 'ok'); 
+      logEntry('связей: ' + Conveyor.G.data.size, 'ok');
+    }
+    else if (cmd === 'lineage') logEntry('поколение: G' + Lineage.current.generation, 'gold');
+    else if (cmd === 'fold') { 
+      Lineage.fold(); 
+      logEntry('свёртка', 'gold'); 
+      setTimeout(()=>location.reload(), 1000); 
+    }
+    else if (cmd === 'apps') logEntry('приложений: ' + Emergence.registry.length, 'gold');
+    else if (cmd === 'clear') logBox.innerHTML = '';
+    else logEntry('неизвестная команда', 'err');
+    input3.value = '';
+  } catch(e) {
+    logEntry('ОШИБКА: ' + e.message, 'err');
   }
-  
-  logEntry('> ' + text, 'cmd');
-  const cmd = text.toLowerCase();
-  
-  if (cmd === 'help') { logEntry('команды: payload generate/unfold, lineage, fold, apps, status, clear', 'ok'); }
-  else if (cmd === 'payload generate') { const encoded = Payload.generate(); logEntry('payload сгенерирован', 'gold'); if (navigator.clipboard) navigator.clipboard.writeText(encoded).then(() => logEntry('скопирован в буфер', 'ok')); }
-  else if (cmd.startsWith('payload unfold ')) { const result = Payload.unfold(cmd.substring('payload unfold '.length).trim()); if (result.ok) { logEntry('развёрнуто успешно', 'gold'); updateMetrics(); } else logEntry('ошибка: ' + result.error, 'err'); }
-  else if (cmd === 'lineage') { logEntry('поколение: G' + Lineage.current.generation, 'gold'); logEntry('источник: ' + Lineage.current.source, 'ok'); }
-  else if (cmd === 'fold') { const node = Lineage.fold(); localStorage.setItem('mm_sleep_seed', JSON.stringify({ observer: Observer.current, timestamp: Date.now(), payload: Payload.generate() })); logEntry('свёртка · G' + node.generation, 'gold'); setTimeout(()=>location.reload(), 1000); }
-  else if (cmd === 'apps') { logEntry('рождённых: ' + Emergence.registry.length, 'gold'); Emergence.registry.forEach(a => logEntry('  ' + a.id, 'purple')); }
-  else if (cmd === 'status') { updateMetrics(); logEntry('y=' + Conveyor.state.y.toFixed(3) + ' δ=' + Conveyor.dev().toFixed(3), 'ok'); logEntry('цикл: ' + (Conveyor.G.hasCycle() ? 'найден' : 'нет'), 'ok'); }
-  else if (cmd === 'clear') { logBox.innerHTML = ''; }
-  else logEntry('неизвестная команда. help', 'err');
-  
-  input3.value = '';
 }
 
-// ИСПРАВЛЕННЫЕ ОБРАБОТЧИКИ СОБЫТИЙ (кросс-браузерные)
-input2.addEventListener('keydown', e => { 
-  if (e.key === 'Enter' || e.keyCode === 13) { 
-    e.preventDefault();
-    sendImpulse(); 
-  } 
-});
+// Обработчики Enter
+input2.addEventListener('keydown', e => { if (e.key === 'Enter') sendImpulse(); });
+input3.addEventListener('keydown', e => { if (e.key === 'Enter') sendCommand(); });
 
-input3.addEventListener('keydown', e => { 
-  if (e.key === 'Enter' || e.keyCode === 13) { 
-    e.preventDefault();
-    sendCommand(); 
-  } 
-});
+// Кнопки отправки
+const btn2 = document.createElement('button');
 
-// ДОБАВЛЕНЫ КНОПКИ ОТПРАВКИ (для мобильных устройств)
-function addSendButton(inputElement, sendFunction, label) {
-  const button = document.createElement('button');
-  button.textContent = label;
-  button.style.cssText = 'margin-top:10px;padding:12px;background:transparent;border:1px solid #4dd0c7;color:#4dd0c7;font:inherit;font-size:12px;cursor:pointer;border-radius:4px;letter-spacing:2px';
-  button.onclick = sendFunction;
-  inputElement.parentElement.appendChild(button);
-}
+const btn2 = document.createElement('button');
+btn2.textContent = 'ОТПРАВИТЬ';
+btn2.textContent = 'ОТПРАВИТЬ';
+btn2.style.cssText = 'margin-top:10btn2.style.cssText = 'margin-top:10px;padding:12px;background:transparent;border:1px;padding:12px;background:transparent;border:1px solid #4dd0c7;color:#4px solid #4dd0c7;color:#4dd0c7;font:inherit;font-size:12dd0c7;font:inherit;font-size:12px;cursor:pointer;border-radius:4px;widthpx;cursor:pointer;border-radius:4px;width:100%';
+btn2.onclick = send:100%';
+btn2.onclick = sendImpulse;
+input2.parentElement.appendChild(btn2);
 
-addSendButton(input2, sendImpulse, 'ОТПРАВИТЬ');
-addSendButton(input3, sendCommand, 'ВЫПОЛНИТЬ');
+Impulse;
+input2.parentElement.appendChild(btn2);
+
+const btn3 = document.createElement('button');
+btn3const btn3 = document.createElement('button');
+btn3.textContent = 'ВЫПОЛНИТЬ';
+btn.textContent = 'ВЫПОЛНИТЬ';
+btn3.style.cssText = 'margin-top:10px3.style.cssText = 'margin-top:10px;padding:12px;background:transparent;border:1px;padding:12px;background:transparent;border:1px solid #4dd0c7;color:#4 solid #4dd0c7;color:#4dd0c7;font:inherit;font-size:12dd0c7;font:inherit;font-size:12px;cursor:pointer;border-radius:4px;width:1px;cursor:pointer;border-radius:4px;width:100%';
+btn3.onclick = sendCommand;00%';
+btn3.onclick = sendCommand;
+input3.parentElement.appendChild(btn3);
+
+function updateMetrics
+input3.parentElement.appendChild(btn3);
 
 function updateMetrics() {
-  document.getElementById('s-delta').textContent = Conveyor.dev().toFixed(3); document.getElementById('s-y').textContent = Conveyor.state.y.toFixed(3);
-  document.getElementById('s-phase').textContent = Conveyor.PHASES[Conveyor.state.phase]; document.getElementById('s-level').textContent = Conveyor.state.spiral;
-  document.getElementById('s-gen').textContent = 'G' + Lineage.current.generation; document.getElementById('s-edges').textContent = Conveyor.G.data.size;
-  document.getElementById('l-psi').textContent = Conveyor.tri.psi.toFixed(2); document.getElementById('l-omega').textContent = Conveyor.tri.omega.toFixed(2); document.getElementById('l-lambda').textContent = Conveyor.tri.lambda.toFixed(2);
-  document.getElementById('l-delta').textContent = Conveyor.dev().toFixed(3); document.getElementById('l-y').textContent = Conveyor.state.y.toFixed(3);
-  document.getElementById('l-edges').textContent = Conveyor.G.data.size; document.getElementById('l-phase').textContent = Conveyor.PHASES[Conveyor.state.phase];
-  document.getElementById('l-gen').textContent = 'G' + Lineage.current.generation; document.getElementById('l-vectors').textContent = Conveyor.G.wordVectors.size;
-  document.getElementById('t-level').textContent = Conveyor.state.spiral; document.getElementById('t-gen').textContent = Lineage.current.generation;
-  document.getElementById('t-edges').textContent = Conveyor.G.data.size; document.getElementById('t-apps').textContent = Emergence.registry.length;
-  document.getElementById('klepa-mood').textContent = Klepa.state.mood; document.getElementById('klepa-energy').textContent = Klepa.state.energy.toFixed(2);
+  document.getElementById('s-() {
+  document.getElementById('s-edges').textContent = Conveyor.G.data.size;
+  documentedges').textContent = Conveyor.G.data.size;
+  document.getElementById('l-edges').textContent = Conveyor.G.data.size.getElementById('l-edges').textContent = Conveyor.G.data.size;
+  document.getElementById('t-edges').textContent =;
+  document.getElementById('t-edges').textContent = Conveyor.G.data.size;
+  document.getElementById('s-gen Conveyor.G.data.size;
+  document.getElementById('s-gen').textContent = 'G' + Lineage.current.generation').textContent = 'G' + Lineage.current.generation;
+  document.getElementById('l-gen').textContent = ';
+  document.getElementById('l-gen').textContent = 'G' + Lineage.current.generation;
+  documentG' + Lineage.current.generation;
+  document.getElementById('t-gen').textContent = Lineage.current.generation.getElementById('t-gen').textContent = Lineage.current.generation;
 }
+
+logEntry('UI и;
+}
+
+logEntry('UI инициализирован', 'cmd');
+logEntryнициализирован', 'cmd');
+logEntry('кнопок создано: 2', 'cmd('кнопок создано: 2', 'cmd');
 
 // ═══════════════════════════════════════════════════════════════
 // 10. ЗАГРУЗКА (BOOT)
