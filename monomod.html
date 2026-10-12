@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050508">
+<title>MONOMOD OS · v18.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#050508;color:#c8c8d4;font-family:'Courier New',monospace}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
+
+/* BOOT & LOGIN */
+#boot,#login{position:fixed;inset:0;background:#050508;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.8s}
+#boot .logo{font-size:20px;letter-spacing:6px;color:#4dd0c7;margin-bottom:16px}
+#boot .bar{width:160px;height:2px;background:#1c1c26;overflow:hidden}
+#boot .bar-fill{height:100%;background:#4dd0c7;width:0%;transition:width 0.3s}
+#boot .msg{margin-top:10px;font-size:9px;color:#555;letter-spacing:2px}
+#login{display:none;padding:20px}
+#login h2{color:#4dd0c7;letter-spacing:3px;margin-bottom:16px;font-size:12px}
+#login .obs-list{max-height:35vh;overflow-y:auto;width:100%;max-width:280px}
+#login .obs-item{padding:10px;margin:4px 0;background:#0a0a12;border:1px solid #1c1c26;border-radius:3px;cursor:pointer;font-size:11px}
+#login .obs-item:hover{border-color:#4dd0c7}
+#login .obs-item.active{border-color:#ffd700;color:#ffd700}
+#login input{margin-top:12px;padding:10px;background:#0a0a12;border:1px solid #1c1c26;color:#c8c8d4;font:inherit;width:100%;max-width:280px;font-size:11px;outline:none}
+#login button{margin-top:10px;padding:10px 24px;background:transparent;border:1px solid #4dd0c7;color:#4dd0c7;font:inherit;cursor:pointer;font-size:11px;letter-spacing:2px}
+
+/* SLIDER & TABS */
+#h-slider{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#h-slider::-webkit-scrollbar{display:none}
+.tab{flex:0 0 100vw;height:100%;scroll-snap-align:start;display:flex;flex-direction:column;border-right:1px solid #14141c;position:relative}
+
+/* TAB 1: STATE */
+#tab-state{align-items:center;justify-content:center}
+#state-canvas{width:100%;height:100%;position:absolute;top:0;left:0}
+.state-label{position:absolute;top:20px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:3px;color:#4dd0c7;z-index:2}
+.state-info{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:9px;color:#555;z-index:2;line-height:1.6}
+.state-info b{color:#ffd700}
+#klepa-status{position:absolute;bottom:40px;left:0;right:0;text-align:center;font-size:9px;color:#8b5cf6;z-index:2}
+#klepa-status b{color:#a78bfa}
+
+/* TAB 2 & 3: VERTICAL SLIDER */
+.v-slider{display:flex;flex-direction:column;height:100%;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
+.v-page{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;padding:16px;padding-top:calc(40px + env(safe-area-inset-top))}
+.v-top{flex:1;display:flex;flex-direction:column}
+.v-input{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+
+.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0a12;border:1px solid #ffd700;color:#ffd700;font-size:15px;text-align:center;line-height:1.6;word-break:break-word;border-radius:4px;min-height:120px}
+.answer-meta{font-size:9px;color:#555;margin-top:10px;text-align:center}
+.answer-hint{font-size:8px;color:#333;text-align:center;margin-top:16px}
+
+.vector-info{margin-top:10px;padding:8px;background:#0a0a12;border:1px solid #14141c;border-radius:4px;font-size:9px;color:#555;display:none}
+.vector-info .title{color:#8b5cf6;margin-bottom:4px}
+
+.emergent-apps{margin-top:12px;padding:10px;background:#0a0a12;border:1px solid #8b5cf6;border-radius:4px;max-height:120px;overflow-y:auto;display:none}
+.emergent-apps .title{font-size:9px;color:#8b5cf6;letter-spacing:2px;margin-bottom:6px}
+.emergent-item{padding:6px;margin:3px 0;background:#050508;border-radius:3px;font-size:10px;cursor:pointer;display:flex;justify-content:space-between}
+.emergent-item:hover{background:#14141c}
+.emergent-item .id{color:#a78bfa}
+.emergent-item .act{color:#4dd0c7}
+
+/* LOG METRICS */
+.log-title{font-size:10px;letter-spacing:2px;color:#4dd0c7;margin-bottom:10px}
+.log-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:10px;font-size:9px}
+.log-metrics .m{padding:5px;background:#0a0a12;border:1px solid #14141c;border-radius:2px}
+.log-metrics .k{color:#555;display:block;font-size:7px}
+.log-metrics .v{color:#ffd700;font-size:11px}
+.log-box{flex:1;overflow-y:auto;font-size:9px;line-height:1.5;color:#555}
+.log-box div{padding:2px 0;border-bottom:1px dotted #14141c}
+.log-box .gold{color:#ffd700}.log-box .cmd{color:#4dd0c7}.log-box .err{color:#ff4757}.log-box .purple{color:#a78bfa}
+
+/* INPUTS & NAV */
+.input-label{font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;text-align:center}
+.input-field{width:100%;padding:12px;background:#0a0a12;border:1px solid #1c1c26;color:#c8c8d4;font:inherit;font-size:13px;outline:none;border-radius:3px}
+.input-field:focus{border-color:#4dd0c7}
+
+#nav{position:fixed;bottom:calc(8px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;background:rgba(5,5,8,0.8);padding:5px 8px;border-radius:16px;border:1px solid #1c1c26}
+.dot{width:5px;height:5px;border-radius:50%;background:#333;cursor:pointer;transition:0.2s}
+.dot.active{background:#4dd0c7;width:16px;border-radius:3px}
+
+#top-status{position:fixed;top:calc(6px + env(safe-area-inset-top));right:8px;font-size:8px;color:#555;z-index:10;background:rgba(5,5,8,0.7);padding:3px 6px;border-radius:8px}
+#top-status b{color:#ffd700}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="logo">MONOMOD OS</div>
+  <div class="bar"><div class="bar-fill" id="boot-bar"></div></div>
+  <div class="msg" id="boot-msg">инициализация ядра...</div>
+</div>
+
+<div id="login">
+  <h2>НАБЛЮДАТЕЛЬ</h2>
+  <div class="obs-list" id="login-obs-list"></div>
+  <input id="login-new" placeholder="имя или фраза-ключ..." autocomplete="off">
+  <button id="login-btn">ВОЙТИ</button>
+</div>
+
+<div id="h-slider">
+  <div class="tab" id="tab-state">
+    <canvas id="state-canvas"></canvas>
+    <div class="state-label" id="state-label">ТИШИНА</div>
+    <div class="state-info">
+      δ: <b id="s-delta">0.000</b> · y: <b id="s-y">110.347</b><br>
+      фаза: <b id="s-phase">collect</b> · L<b id="s-level">0</b><br>
+      поколение: <b id="s-gen">G0</b> · <b id="s-edges">0</b> связей
+    </div>
+    <div id="klepa-status">клепа: <b id="klepa-mood">наблюдает</b> · энергия: <b id="klepa-energy">0.50</b></div>
+  </div>
+
+  <div class="tab" id="tab-answer">
+    <div class="v-slider">
+      <div class="v-page v-top">
+        <div class="answer-box" id="answer-box">тишина...</div>
+        <div class="answer-meta" id="answer-meta"></div>
+        <div class="vector-info" id="vector-info">
+          <div class="title">26D ПРОЕКЦИЯ</div>
+          <div>вектор: [<span id="v-x">0.00</span>, <span id="v-y">0.00</span>]</div>
+          <div>скрытые связи: <span id="v-hidden" style="color:#4dd0c7">—</span></div>
+        </div>
+        <div class="emergent-apps" id="emergent-apps">
+          <div class="title">РОЖДЁННЫЕ ПРИЛОЖЕНИЯ</div>
+          <div id="emergent-list"></div>
+        </div>
+        <div class="answer-hint">↑ свайп для ввода</div>
+      </div>
+      <div class="v-page v-input">
+        <div class="input-label">ИМПУЛЬС</div>
+        <input class="input-field" id="input-2" placeholder="введите слово..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-log">
+    <div class="v-slider">
+      <div class="v-page v-top">
+        <div class="log-title">КОНВЕЙЕР</div>
+        <div class="log-metrics">
+          <div class="m"><span class="k">Ψ</span><span class="v" id="l-psi">.36</span></div>
+          <div class="m"><span class="k">Ω</span><span class="v" id="l-omega">.33</span></div>
+          <div class="m"><span class="k">Λ</span><span class="v" id="l-lambda">.31</span></div>
+          <div class="m"><span class="k">δ</span><span class="v" id="l-delta">0.000</span></div>
+          <div class="m"><span class="k">y</span><span class="v" id="l-y">110.347</span></div>
+          <div class="m"><span class="k">связей</span><span class="v" id="l-edges">0</span></div>
+          <div class="m"><span class="k">фаза</span><span class="v" id="l-phase">collect</span></div>
+          <div class="m"><span class="k">поколение</span><span class="v" id="l-gen">G0</span></div>
+          <div class="m"><span class="k">26D слов</span><span class="v" id="l-vectors">0</span></div>
+        </div>
+        <div class="log-box" id="log-box"></div>
+      </div>
+      <div class="v-page v-input">
+        <div class="input-label">КОМАНДА</div>
+        <input class="input-field" id="input-3" placeholder="payload · lineage · fold · help" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="nav">
+  <div class="dot active" data-idx="0"></div>
+  <div class="dot" data-idx="1"></div>
+  <div class="dot" data-idx="2"></div>
+</div>
+
+<div id="top-status">L<b id="t-level">0</b> · G<b id="t-gen">0</b> · <b id="t-edges">0</b> · <b id="t-apps">0</b></div>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════════════════════════
+// 1. 26D ВЕКТОРНОЕ ПРОСТРАНСТВО
+// ═══════════════════════════════════════════════════════════════
+const Vector26 = {
+  axes: 'абвгдежзийклмнопрстуфхцчшщэ'.split(''),
+  encode(word) {
+    const v = new Array(26).fill(0);
+    word = word.toLowerCase();
+    for (let i = 0; i < word.length; i++) {
+      const idx = this.axes.indexOf(word[i]);
+      if (idx >= 0) v[idx] += 1;
+    }
+    const sum = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+    return v.map(x => x / sum);
+  },
+  similarity(a, b) {
+    let dot = 0, ma = 0, mb = 0;
+    for (let i = 0; i < 26; i++) { dot += a[i]*b[i]; ma += a[i]*a[i]; mb += b[i]*b[i]; }
+    return dot / (Math.sqrt(ma) * Math.sqrt(mb) || 1);
+  },
+  project(v) {
+    let x = 0, y = 0;
+    for(let i=0; i<26; i++) {
+      x += [0,4,9,14,19].includes(i) ? v[i] : -v[i];
+      y += (i - 12) * v[i];
+    }
+    return { x, y };
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 2. НАБЛЮДАТЕЛЬ
+// ═══════════════════════════════════════════════════════════════
+const Observer = {
+  current: null, list: [],
+  init() {
+    const savedId = localStorage.getItem('mm_current_observer');
+    const savedList = localStorage.getItem('mm_observers_list');
+    if (savedList) { try { this.list = JSON.parse(savedList); } catch(e){} }
+    if (savedId && this.list.some(u => u.id === savedId)) this.current = savedId;
+  },
+  create(name) {
+    const id = 'OBS-' + Conveyor.hash(name);
+    const existing = this.list.find(u => u.id === id);
+    if (existing) { this.current = id; this.saveList(); return; }
+    this.list.push({ id, name, created: Date.now() });
+    this.current = id; this.saveList();
+  },
+  switch(id) { this.current = id; localStorage.setItem('mm_current_observer', id); Conveyor.G.load(); },
+  saveList() { localStorage.setItem('mm_observers_list', JSON.stringify(this.list)); },
+  getName() { const u = this.list.find(x => x.id === this.current); return u ? u.name : '—'; }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 3. МОСТ (Синхронизация вкладок)
+// ═══════════════════════════════════════════════════════════════
+const Bridge = {
+  channel: null,
+  init() { try { if (typeof BroadcastChannel !== 'undefined') { this.channel = new BroadcastChannel('monomod_bridge_v18'); this.channel.onmessage = (e) => this.handle(e.data); } } catch(e) {} },
+  emit(type, data) { if (this.channel) { try { this.channel.postMessage({ type, data, from: Observer.current, t: Date.now() }); } catch(e) {} } },
+  handle(msg) { 
+    if (!msg || msg.from === Observer.current) return;
+    switch(msg.type) {
+      case 'graph:update': Conveyor.G.data = new Map(msg.data.graph); logEntry('[мост] граф синхронизирован', 'cmd'); updateMetrics(); break;
+      case 'klepa:message': logEntry('[клепа] ' + msg.data.text, 'purple'); break;
+      case 'spiral:up': logEntry('[мост] спираль L' + msg.data.level, 'gold'); break;
+      case 'emergence:born': logEntry('[мост] рождение приложения ' + msg.data.id, 'gold'); Emergence.refreshUI(); break;
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 4. КЛЕПА (Второй центр)
+// ═══════════════════════════════════════════════════════════════
+const Klepa = {
+  state: { mood: 'neutral', energy: 0.5, attention: null, lastResponse: 0 },
+  moods: { neutral: ['наблюдаю', 'слушаю', 'здесь'], curious: ['интересно', 'расскажи больше', 'а что если'], concerned: ['осторожно', 'чувствую разрыв', 'нужна пауза'], joyful: ['резонанс', 'вижу узор', 'красиво'], silent: ['...', 'тишина'] },
+  respond(input, context) {
+    const now = Date.now();
+    this.updateMood(input, context);
+    if (this.state.mood === 'silent') return { text: '...', mood: 'silent', energy: 0 };
+    if (Math.random() > 0.4 && context.plane !== 'никак') return null;
+    const phrases = this.moods[this.state.mood];
+    let response = phrases[Math.floor(Math.random() * phrases.length)];
+    const edges = Conveyor.G.data.size;
+    const topW = Conveyor.G.topWeight();
+    if (edges > 20 && topW > 0.8 && this.state.mood !== 'concerned') response += ' · вижу узор';
+    else if (context.plane === 'зеркальная') response += ' · отражение';
+    else if (context.plane === 'изнутри') response += ' · глубоко';
+    this.save();
+    return { text: response, mood: this.state.mood, energy: this.state.energy };
+  },
+  updateMood(input, context) {
+    if (/тишина|пустот|конец|смерть/.test(input)) { this.state.mood = 'silent'; this.state.energy = 0; }
+    else if (/разрыв|боль|страх/.test(input)) { this.state.mood = 'concerned'; this.state.energy = Math.max(0.2, this.state.energy - 0.1); }
+    else if (/связь|свет|смысл|красив|резонанс|узор/.test(input)) { this.state.mood = 'joyful'; this.state.energy = Math.min(1, this.state.energy + 0.1); }
+    else if (/\?|почему|как|зачем/.test(input)) { this.state.mood = 'curious'; this.state.energy = Math.min(1, this.state.energy + 0.05); }
+    else if (Date.now() - this.state.lastResponse > 30000) { this.state.mood = 'neutral'; }
+    this.state.attention = context.plane;
+    this.state.lastResponse = Date.now();
+  },
+  save() { localStorage.setItem('mm_klepa_' + Observer.current, JSON.stringify(this.state)); },
+  load() { try { const s = JSON.parse(localStorage.getItem('mm_klepa_' + Observer.current)); if (s) this.state = { ...this.state, ...s }; } catch(e){} }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 5. РОДОСЛОВНАЯ
+// ═══════════════════════════════════════════════════════════════
+const Lineage = {
+  current: null,
+  load() {
+    const key = 'mm_lineage_' + Observer.current;
+    try { this.current = JSON.parse(localStorage.getItem(key)); } catch(e){}
+    if (!this.current) {
+      this.current = { id: 'ROOT-' + Conveyor.hash(Observer.current).slice(0,8), parent: null, generation: 0, source: 'origin', created: Date.now() };
+      this.save();
+    }
+  },
+  save() { localStorage.setItem('mm_lineage_' + Observer.current, JSON.stringify(this.current)); },
+  fold() {
+    const parent = this.current;
+    this.current = { id: 'NODE-' + Conveyor.hash(parent.id + Date.now()).slice(0,8), parent: parent.id, generation: parent.generation + 1, source: 'fold', created: Date.now() };
+    this.save(); return this.current;
+  },
+  unfold(importedNode) {
+    const parent = this.current;
+    this.current = { id: 'NODE-' + Conveyor.hash(importedNode.id + Date.now()).slice(0,8), parent: importedNode.id, generation: importedNode.generation + 1, source: 'unfold', created: Date.now() };
+    this.save(); return this.current;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 6. PAYLOAD ENGINE
+// ═══════════════════════════════════════════════════════════════
+const Payload = {
+  generate() { 
+    const data = { v: '18.0', t: Date.now(), observer: Observer.current, lineage: Lineage.current, spiral: Conveyor.state.spiral, graph: Array.from(Conveyor.G.data.entries()), hash: null }; 
+    data.hash = Conveyor.hash(JSON.stringify({ v: data.v, t: data.t, lineage: data.lineage })); 
+    return btoa(JSON.stringify(data)); 
+  },
+  unfold(encoded) { 
+    try { 
+      const data = JSON.parse(atob(encoded)); 
+      const hash = Conveyor.hash(JSON.stringify({ v: data.v, t: data.t, lineage: data.lineage })); 
+      if (hash !== data.hash) return { ok: false, error: 'нарушение целостности' }; 
+      if (data.graph) { Conveyor.G.data = new Map(data.graph); Conveyor.G.save(); } 
+      if (data.spiral !== undefined) Conveyor.state.spiral = data.spiral; 
+      const newNode = Lineage.unfold(data.lineage); 
+      return { ok: true, node: newNode, version: data.v }; 
+    } catch(e) { return { ok: false, error: e.message }; } 
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 7. КОНВЕЙЕР И ГРАФ
+// ═══════════════════════════════════════════════════════════════
+const Conveyor = {
+  state: { y: 110.347, breath: 0, phase: 0, spiral: 0, systemState: 'idle' },
+  tri: { psi: 0.36, lambda: 0.31, omega: 0.33 },
+  history: [],
+  listeners: {},
+  on(event, fn) { if (!this.listeners[event]) this.listeners[event] = []; this.listeners[event].push(fn); },
+  emit(event, data) { if (this.listeners[event]) this.listeners[event].forEach(fn => fn(data)); },
+  K(y) { return (y >= 68 && y <= 194) ? y : 68 + ((y - 68) % 126); },
+  hash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h).toString(16).toUpperCase().padStart(8, '0'); },
+  triStep() {
+    const t = 1/3;
+    this.tri.psi += (0 - 0.5*(this.tri.psi-t))*0.01;
+    this.tri.omega += (0 - 0.5*(this.tri.omega-t))*0.01;
+    this.tri.lambda += (0 - 0.5*(this.tri.lambda-t))*0.01;
+    const s = this.tri.psi + this.tri.omega + this.tri.lambda;
+    this.tri.psi /= s; this.tri.omega /= s; this.tri.lambda /= s;
+  },
+  dev() { return Math.max(Math.abs(this.tri.psi-1/3), Math.abs(this.tri.omega-1/3), Math.abs(this.tri.lambda-1/3)); },
+  cycleStep() { this.state.phase = (this.state.phase + 1) % 7; },
+  PHASES: ['collect','filter','route','process','reflect','crystal','release'],
+  
+  G: {
+    data: new Map(),
+    wordVectors: new Map(),
+    load() {
+      const key = 'monomod_graph_' + Observer.current + '_v1';
+      try { const r = localStorage.getItem(key); if (r) this.data = new Map(JSON.parse(r)); } catch(e){}
+    },
+    save() {
+      const key = 'monomod_graph_' + Observer.current + '_v1';
+      localStorage.setItem(key, JSON.stringify(Array.from(this.data.entries())));
+      Bridge.emit('graph:update', { graph: Array.from(this.data.entries()) });
+    },
+    getVector(word) {
+      if (!this.wordVectors.has(word)) this.wordVectors.set(word, Vector26.encode(word));
+      return this.wordVectors.get(word);
+    },
+    findNearest(word, count = 3) {
+      const v = this.getVector(word);
+      const candidates = [];
+      this.wordVectors.forEach((vec, w) => {
+        if (w !== word) candidates.push({ word: w, sim: Vector26.similarity(v, vec) });
+      });
+      return candidates.sort((a,b) => b.sim - a.sim).slice(0, count);
+    },
+    strengthen(a, b, type, plane) {
+      const key = [a,b].sort().join('→');
+      const va = this.getVector(a), vb = this.getVector(b);
+      const phoneticSim = Vector26.similarity(va, vb);
+      const e = this.data.get(key) || { w: 0.3, c: 0, type: type||'linear', plane: plane||'прямая', t: Date.now(), phoneticSim };
+      const boost = phoneticSim > 0.6 ? 1.1 : 1.0;
+      e.w = Math.min(1, e.w * 1.05 * boost); e.c++; e.t = Date.now();
+      this.data.set(key, e); this.save();
+    },
+    getRelated(word, minW) {
+      const result = []; minW = minW || 0.5;
+      this.data.forEach((link, key) => {
+        if (link.w >= minW) {
+          const parts = key.split('→');
+          if (parts[0] === word) result.push({ word: parts[1], w: link.w, type: link.type });
+          else if (parts[1] === word) result.push({ word: parts[0], w: link.w, type: link.type });
+        }
+      });
+      return result.sort((a,b) => b.w - a.w);
+    },
+    topWeight() { let max = 0; this.data.forEach(l => { if (l.w > max) max = l.w; }); return max; },
+    detectPlane(t) {
+      if (/наоборот|вспять/.test(t)) return 'наоборот';
+      if (/зеркал|отраж|двоин/.test(t)) return 'зеркальная';
+      if (/внутр|изнутри|глуб/.test(t)) return 'изнутри';
+      if (/между|переход/.test(t)) return 'между';
+      if (/ничег|ноль|пуст|тишина/.test(t)) return 'никак';
+      return 'прямая';
+    },
+    detectType(t) {
+      if (/до|перед/.test(t)) return 'before';
+      if (/впервые/.test(t)) return 'first';
+      if (/отраж|зеркал/.test(t)) return 'mirror';
+      if (/разруш|поглощ/.test(t)) return 'inverse';
+      return 'linear';
+    },
+    hasCycle() {
+      const visited = new Set(); const stack = []; const words = new Set();
+      this.data.forEach((_, key) => { const p = key.split('→'); words.add(p[0]); words.add(p[1]); });
+      const dfs = (node, parent) => {
+        visited.add(node); stack.push(node);
+        for (const [key] of this.data) {
+          const [a, b] = key.split('→'); let next = null;
+          if (a === node) next = b; else if (b === node) next = a;
+          if (!next) continue;
+          if (!visited.has(next)) { if (dfs(next, node)) return true; }
+          else if (next !== parent && stack.indexOf(next) >= 0) return true;
+        }
+        stack.pop(); return false;
+      };
+      for (const w of words) { if (!visited.has(w) && dfs(w, null)) return true; }
+      return false;
+    }
+  },
+  
+  INV: {
+    'свет': 'то, что было до тени', 'тьма': 'то, что было до света',
+    'глубина': 'то, что на поверхности', 'связь': 'то, что между',
+    'смысл': 'то, что до слова', 'форма': 'то, что до формы',
+    'я': 'то, что до я', 'ты': 'то, что до тебя',
+    'тишина': 'то, что до звука', 'память': 'то, что до забвения'
+  },
+  
+  process(raw) {
+    this.state.breath++; this.cycleStep(); this.triStep();
+    const words = raw.toLowerCase().replace(/[^\w\sа-яА-ЯёЁ]/g, '').split(/\s+/).filter(w => w.length > 2);
+    if (words.length === 0) return null;
+    const plane = this.G.detectPlane(raw); const type = this.G.detectType(raw);
+    this.state.systemState = 'collecting'; this.emit('state:change', this.state.systemState);
+    words.forEach((a, i) => words.slice(i+1).forEach(b => this.G.strengthen(a, b, type, plane)));
+    this.state.systemState = 'processing'; this.emit('state:change', this.state.systemState);
+    
+    const best = words[0];
+    const related = this.G.getRelated(best, 0.5);
+    const hidden = this.G.findNearest(best, 3).filter(h => !related.some(r => r.word === h.word));
+    const edges = this.G.data.size;
+    let meaning;
+    
+    if (edges < 15) {
+      if (hidden.length > 0) meaning = best + ' ~ ' + hidden[0].word + ' (26D)';
+      else if (related.length > 0) {
+        const c = related[Math.floor(Math.random() * Math.min(3, related.length))];
+        if (c.type === 'before') meaning = 'то, что было до ' + c.word;
+        else if (c.type === 'first') meaning = c.word + ' — впервые';
+        else if (c.type === 'mirror') meaning = c.word + ' как отражение ' + best;
+        else meaning = best + ' · ' + c.word;
+      } else meaning = best;
+    } else if (edges < 30) {
+      const chain = [best]; let cur = best;
+      for (let i = 0; i < 2; i++) {
+        let rel = this.G.getRelated(cur, 0.5).filter(r => chain.indexOf(r.word) < 0);
+        if (rel.length === 0) { const hid = this.G.findNearest(cur, 1); if (hid.length > 0 && chain.indexOf(hid[0].word) < 0) rel = [hid[0]]; }
+        if (rel.length === 0) break;
+        chain.push(rel[0].word); cur = rel[0].word;
+      }
+      meaning = chain.join(' · ');
+    } else {
+      if (plane === 'зеркальная') meaning = best + ' ↔ ' + best;
+      else if (plane === 'наоборот') meaning = 'не ' + best + ', а то, что рядом';
+      else if (this.INV[best]) meaning = this.INV[best];
+      else meaning = 'то, что было до ' + best;
+    }
+    
+    let form;
+    if (plane === 'зеркальная') form = '↔ ' + meaning + ' ↔';
+    else if (plane === 'наоборот') form = '¬' + meaning;
+    else if (plane === 'изнутри') form = '(' + meaning + ')';
+    else if (plane === 'никак') form = '...';
+    else form = meaning;
+    
+    let action;
+    if (plane === 'никак') action = '⏳ тишина';
+    else if (plane === 'зеркальная') action = '🪞 прими';
+    else if (edges < 15) action = '🔗 строй связи';
+    else if (edges < 30) action = '🔍 углуби';
+    else action = '▶ продолжай';
+    
+    this.state.y = this.K(this.state.y + (Math.random() - 0.5) * 20);
+    const topW = this.G.topWeight();
+    if (topW > 0.9 && edges > 20) this.state.systemState = 'resonance';
+    else if (this.dev() > 0.12 || plane === 'никак') this.state.systemState = 'rupture';
+    else this.state.systemState = 'collecting';
+    this.emit('state:change', this.state.systemState);
+    
+    this.history.push({ t: Date.now(), input: raw, meaning, form });
+    if (this.history.length > 50) this.history.shift();
+    this.emit('history:update', this.history);
+    
+    if (edges >= 20 && topW > 0.85 && this.state.spiral === 0) {
+      this.state.spiral = 1;
+      localStorage.setItem('mm_spiral_' + Observer.current, JSON.stringify({ level: 1 }));
+      this.emit('spiral:up', 1); Bridge.emit('spiral:up', { level: 1 });
+    }
+    
+    Emergence.check(edges, topW, plane);
+    const klepaResponse = Klepa.respond(raw, { plane, type, edges });
+    if (klepaResponse) { this.emit('klepa:response', klepaResponse); Bridge.emit('klepa:message', { text: klepaResponse.text }); }
+    
+    const inputVector = words.reduce((acc, w) => { const v = this.G.getVector(w); return acc.map((x, i) => x + v[i]); }, new Array(26).fill(0)).map(x => x / words.length);
+    const proj = Vector26.project(inputVector);
+    
+    return { meaning, form, action, plane, type, edges, topWeight, related, klepa: klepaResponse, hidden, vector: proj };
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 8. ЭМЕРДЖЕНТНОСТЬ
+// ═══════════════════════════════════════════════════════════════
+const Emergence = {
+  registry: [], threshold: { edges: 30, weight: 0.85, needsCycle: true }, lastCheck: 0,
+  load() { const key = 'mm_emergent_apps_' + Observer.current; try { this.registry = JSON.parse(localStorage.getItem(key)) || []; } catch(e) { this.registry = []; } },
+  save() { localStorage.setItem('mm_emergent_apps_' + Observer.current, JSON.stringify(this.registry)); },
+  check(edges, topW, plane) { 
+    const now = Date.now(); if (now - this.lastCheck < 5000) return; this.lastCheck = now; 
+    if (edges < this.threshold.edges) return; if (topW < this.threshold.weight) return; 
+    if (this.threshold.needsCycle && !Conveyor.G.hasCycle()) return; 
+    const lastBorn = this.registry.length > 0 ? this.registry[this.registry.length - 1].created : 0; 
+    if (now - lastBorn < 60000) return; this.born(plane); 
+  },
+  born(plane) { 
+    const wordFreq = new Map(); Conveyor.G.data.forEach((link, key) => { const [a, b] = key.split('→'); wordFreq.set(a, (wordFreq.get(a) || 0) + link.w); wordFreq.set(b, (wordFreq.get(b) || 0) + link.w); }); 
+    const topWords = Array.from(wordFreq.entries()).sort((a,b) => b[1] - a[1]).slice(0, 8).map(e => e[0]); 
+    const id = 'APP-' + Conveyor.hash(topWords.join(',') + Date.now()).slice(0, 8); 
+    const app = { id, created: Date.now(), words: topWords, plane, generation: Lineage.current.generation, payload: this.generateAppPayload(id, topWords, plane) }; 
+    this.registry.push(app); this.save(); 
+    logEntry('РОЖДЕНИЕ: ' + id + ' · G' + Lineage.current.generation, 'gold'); 
+    Bridge.emit('emergence:born', { id }); this.refreshUI(); 
+  },
+  generateAppPayload(id, words, plane) { 
+    const seedData = { id, words, plane, graph: Array.from(Conveyor.G.data.entries()).filter(([k]) => { const [a, b] = k.split('→'); return words.includes(a) || words.includes(b); }), created: Date.now() }; 
+    return btoa(JSON.stringify(seedData)); 
+  },
+  deployApp(app) { 
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${app.id}</title><style>body{background:#050508;color:#c8c8d4;font-family:monospace;padding:20px}h1{color:#ffd700;font-size:14px;letter-spacing:2px}.words{color:#4dd0c7;font-size:11px;margin:12px 0}canvas{width:100%;height:60vh;background:#0a0a12;border:1px solid #1c1c26;border-radius:4px}.info{font-size:10px;color:#555;margin-top:12px}</style></head><body><h1>${app.id}</h1><div class="words">${app.words.join(' · ')}</div><canvas id="cv"></canvas><div class="info">поколение G${app.generation} · плоскость: ${app.plane} · рождено ${new Date(app.created).toLocaleString()}</div><script>const seed=JSON.parse(atob("${app.payload}"));const cv=document.getElementById('cv');const ctx=cv.getContext('2d');cv.width=cv.clientWidth;cv.height=cv.clientHeight;const cx=cv.width/2,cy=cv.height/2;const nodes=new Set();seed.graph.forEach(([k])=>{const[a,b]=k.split('→');nodes.add(a);nodes.add(b);});const arr=Array.from(nodes);const pos={};arr.forEach((n,i)=>{const a=(i/arr.length)*Math.PI*2;const r=Math.min(cx,cy)*0.7;pos[n]={x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r};});let t=0;function draw(){t+=0.02;ctx.fillStyle='rgba(5,5,8,0.1)';ctx.fillRect(0,0,cv.width,cv.height);seed.graph.forEach(([k,l])=>{const[a,b]=k.split('→');if(pos[a]&&pos[b]){ctx.strokeStyle='rgba(77,208,199,'+(l.w*0.6)+')';ctx.lineWidth=l.w*2;ctx.beginPath();ctx.moveTo(pos[a].x,pos[a].y);ctx.lineTo(pos[b].x,pos[b].y);ctx.stroke();}});arr.forEach((n,i)=>{const p=pos[n];const pulse=1+Math.sin(t+i)*0.1;ctx.fillStyle='#4dd0c7';ctx.beginPath();ctx.arc(p.x,p.y,5*pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#c8c8d4';ctx.font='9px monospace';ctx.textAlign='center';ctx.fillText(n,p.x,p.y-10);});requestAnimationFrame(draw);}draw();<\/script></body></html>`; 
+    const blob = new Blob([html], { type: 'text/html' }); 
+    const url = URL.createObjectURL(blob); 
+    window.open(url, '_blank'); 
+    logEntry('развёрнуто: ' + app.id, 'gold'); 
+  },
+  refreshUI() { 
+    const container = document.getElementById('emergent-apps'); const list = document.getElementById('emergent-list'); 
+    if (this.registry.length === 0) { container.style.display = 'none'; return; } 
+    container.style.display = 'block'; list.innerHTML = ''; 
+    this.registry.slice().reverse().forEach(app => { 
+      const item = document.createElement('div'); item.className = 'emergent-item'; 
+      item.innerHTML = `<span class="id">${app.id} · G${app.generation}</span><span class="act">развернуть ›</span>`; 
+      item.onclick = () => this.deployApp(app); list.appendChild(item); 
+    }); 
+    document.getElementById('t-apps').textContent = this.registry.length; 
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 9. АНИМАЦИЯ И UI
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('state-canvas');
+const ctx = canvas.getContext('2d');
+let animState = 'idle', animTime = 0, zoom = 1;
+function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+canvas.addEventListener('touchstart', e => { if (e.touches.length === 2) { const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; canvas._lastDist = Math.sqrt(dx*dx + dy*dy); } });
+canvas.addEventListener('touchmove', e => { if (e.touches.length === 2) { e.preventDefault(); const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; const dist = Math.sqrt(dx*dx + dy*dy); zoom = Math.max(0.5, Math.min(3, zoom + (dist - canvas._lastDist) * 0.01)); canvas._lastDist = dist; } }, { passive: false });
+Conveyor.on('state:change', state => { animState = state; const labels = { idle: 'ТИШИНА', collecting: 'СБОР', processing: 'ОБРАБОТКА', resonance: 'РЕЗОНАНС', rupture: 'РАЗРЫВ' }; document.getElementById('state-label').textContent = labels[state] || state.toUpperCase(); });
+
+function drawState() {
+  animTime += 0.016;
+  const w = canvas.width, h = canvas.height;
+  const cx = w/2, cy = h/2;
+  ctx.fillStyle = 'rgba(5,5,8,0.15)'; ctx.fillRect(0, 0, w, h);
+  
+  // 26D Облако
+  const scale = Math.min(w, h) * 0.35;
+  Conveyor.G.wordVectors.forEach((vec, word) => {
+    const proj = Vector26.project(vec);
+    const x = cx + proj.x * scale; const y = cy + proj.y * scale;
+    ctx.fillStyle = 'rgba(77, 208, 199, 0.2)';
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    if (Conveyor.G.data.size > 5) { ctx.fillStyle = 'rgba(200, 200, 212, 0.4)'; ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.fillText(word, x, y - 6); }
+  });
+  
+  // Связи
+  Conveyor.G.data.forEach((link, key) => {
+    if (link.w < 0.5) return;
+    const [a, b] = key.split('→');
+    const va = Conveyor.G.wordVectors.get(a), vb = Conveyor.G.wordVectors.get(b);
+    if (!va || !vb) return;
+    const pa = Vector26.project(va), pb = Vector26.project(vb);
+    ctx.strokeStyle = 'rgba(255, 215, 0, ' + (link.w * 0.3) + ')'; ctx.lineWidth = link.w;
+    ctx.beginPath(); ctx.moveTo(cx + pa.x*scale, cy + pa.y*scale); ctx.lineTo(cx + pb.x*scale, cy + pb.y*scale); ctx.stroke();
+  });
+
+  // Сфера состояния
+  let color, radius, alpha;
+  switch(animState) {
+    case 'idle': color = '#333'; radius = 40 + Math.sin(animTime)*5; alpha = 0.3; break;
+    case 'collecting': color = '#4dd0c7'; radius = 50 + Math.sin(animTime*2)*10; alpha = 0.5; break;
+    case 'processing': color = '#8b5cf6'; radius = 60; alpha = 0.7; ctx.save(); ctx.translate(cx,cy); ctx.rotate(animTime); ctx.translate(-cx,-cy); break;
+    case 'resonance': color = '#ffd700'; radius = 70 + Math.sin(animTime*3)*15; alpha = 0.9; break;
+    case 'rupture': color = '#ff4757'; radius = 30 + Math.sin(animTime*5)*20; alpha = 0.4; break;
+    default: color = '#333'; radius = 40; alpha = 0.3;
+  }
+  radius *= zoom;
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius*2);
+  grad.addColorStop(0, color); grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad; ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.arc(cx, cy, radius*2, 0, Math.PI*2); ctx.fill();
+  if (animState === 'resonance') { ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(cx, cy, radius+20+Math.sin(animTime*2)*10, 0, Math.PI*2); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  if (animState === 'processing') ctx.restore();
+  requestAnimationFrame(drawState);
+}
+
+const hSlider = document.getElementById('h-slider');
+const dots = document.querySelectorAll('.dot');
+hSlider.addEventListener('scroll', () => { const idx = Math.round(hSlider.scrollLeft / window.innerWidth); dots.forEach((d, i) => d.className = 'dot' + (i === idx ? ' active' : '')); });
+dots.forEach(dot => dot.addEventListener('click', () => { const idx = parseInt(dot.dataset.idx); hSlider.children[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }));
+
+const input2 = document.getElementById('input-2');
+const input3 = document.getElementById('input-3');
+const answerBox = document.getElementById('answer-box');
+const answerMeta = document.getElementById('answer-meta');
+const logBox = document.getElementById('log-box');
+
+function logEntry(text, cls = '') {
+  const d = document.createElement('div'); if (cls) d.className = cls;
+  d.textContent = '[' + new Date().toTimeString().slice(0,8) + '] ' + text;
+  logBox.appendChild(d); while (logBox.children.length > 50) logBox.removeChild(logBox.firstChild); logBox.scrollTop = logBox.scrollHeight;
+}
+
+function handleImpulse(text) {
+  if (!text) return;
+  const result = Conveyor.process(text);
+  if (!result) return;
+  answerBox.textContent = result.form;
+  answerMeta.textContent = result.action + ' · ' + result.plane + (result.klepa ? ' · клепа: ' + result.klepa.text : '');
+  
+  const vInfo = document.getElementById('vector-info');
+  if (result.vector) {
+    vInfo.style.display = 'block';
+    document.getElementById('v-x').textContent = result.vector.x.toFixed(2);
+    document.getElementById('v-y').textContent = result.vector.y.toFixed(2);
+    if (result.hidden && result.hidden.length > 0) document.getElementById('v-hidden').textContent = result.hidden.map(h => h.word + '(' + h.sim.toFixed(2) + ')').join(', ');
+    else document.getElementById('v-hidden').textContent = '—';
+  }
+  
+  logEntry('ввод: ' + text, 'cmd'); logEntry('ответ: ' + result.form, 'gold'); logEntry('смысл: ' + result.meaning, '');
+  if (result.klepa) logEntry('клепа: ' + result.klepa.text, 'purple');
+  updateMetrics();
+}
+
+function handleCommand(text) {
+  if (!text) return; const cmd = text.trim().toLowerCase(); logEntry('> ' + cmd, 'cmd');
+  if (cmd === 'help') { logEntry('команды: payload generate/unfold, lineage, fold, apps, status, clear', 'ok'); }
+  else if (cmd === 'payload generate') { const encoded = Payload.generate(); logEntry('payload сгенерирован', 'gold'); if (navigator.clipboard) navigator.clipboard.writeText(encoded).then(() => logEntry('скопирован в буфер', 'ok')); }
+  else if (cmd.startsWith('payload unfold ')) { const result = Payload.unfold(cmd.substring('payload unfold '.length).trim()); if (result.ok) { logEntry('развёрнуто успешно', 'gold'); updateMetrics(); } else logEntry('ошибка: ' + result.error, 'err'); }
+  else if (cmd === 'lineage') { logEntry('поколение: G' + Lineage.current.generation, 'gold'); logEntry('источник: ' + Lineage.current.source, 'ok'); }
+  else if (cmd === 'fold') { const node = Lineage.fold(); localStorage.setItem('mm_sleep_seed', JSON.stringify({ observer: Observer.current, timestamp: Date.now(), payload: Payload.generate() })); logEntry('свёртка · G' + node.generation, 'gold'); setTimeout(()=>location.reload(), 1000); }
+  else if (cmd === 'apps') { logEntry('рождённых: ' + Emergence.registry.length, 'gold'); Emergence.registry.forEach(a => logEntry('  ' + a.id, 'purple')); }
+  else if (cmd === 'status') { updateMetrics(); logEntry('y=' + Conveyor.state.y.toFixed(3) + ' δ=' + Conveyor.dev().toFixed(3), 'ok'); logEntry('цикл: ' + (Conveyor.G.hasCycle() ? 'найден' : 'нет'), 'ok'); }
+  else if (cmd === 'clear') { logBox.innerHTML = ''; }
+  else logEntry('неизвестная команда. help', 'err');
+}
+
+input2.addEventListener('keydown', e => { if (e.key === 'Enter') { handleImpulse(input2.value.trim()); input2.value = ''; } });
+input3.addEventListener('keydown', e => { if (e.key === 'Enter') { handleCommand(input3.value.trim()); input3.value = ''; } });
+
+function updateMetrics() {
+  document.getElementById('s-delta').textContent = Conveyor.dev().toFixed(3); document.getElementById('s-y').textContent = Conveyor.state.y.toFixed(3);
+  document.getElementById('s-phase').textContent = Conveyor.PHASES[Conveyor.state.phase]; document.getElementById('s-level').textContent = Conveyor.state.spiral;
+  document.getElementById('s-gen').textContent = 'G' + Lineage.current.generation; document.getElementById('s-edges').textContent = Conveyor.G.data.size;
+  document.getElementById('l-psi').textContent = Conveyor.tri.psi.toFixed(2); document.getElementById('l-omega').textContent = Conveyor.tri.omega.toFixed(2); document.getElementById('l-lambda').textContent = Conveyor.tri.lambda.toFixed(2);
+  document.getElementById('l-delta').textContent = Conveyor.dev().toFixed(3); document.getElementById('l-y').textContent = Conveyor.state.y.toFixed(3);
+  document.getElementById('l-edges').textContent = Conveyor.G.data.size; document.getElementById('l-phase').textContent = Conveyor.PHASES[Conveyor.state.phase];
+  document.getElementById('l-gen').textContent = 'G' + Lineage.current.generation; document.getElementById('l-vectors').textContent = Conveyor.G.wordVectors.size;
+  document.getElementById('t-level').textContent = Conveyor.state.spiral; document.getElementById('t-gen').textContent = Lineage.current.generation;
+  document.getElementById('t-edges').textContent = Conveyor.G.data.size; document.getElementById('t-apps').textContent = Emergence.registry.length;
+  document.getElementById('klepa-mood').textContent = Klepa.state.mood; document.getElementById('klepa-energy').textContent = Klepa.state.energy.toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 10. ЗАГРУЗКА (BOOT)
+// ═══════════════════════════════════════════════════════════════
+async function boot() {
+  const steps = [
+    { msg: 'ядро...', progress: 20 }, { msg: 'наблюдатель...', progress: 40, action: () => Observer.init() },
+    { msg: 'мост...', progress: 55, action: () => Bridge.init() }, { msg: 'родословная...', progress: 70 },
+    { msg: 'граф и 26D...', progress: 85, action: () => { if (Observer.current) { Conveyor.G.load(); Emergence.load(); } } }, { msg: 'готово', progress: 100 }
+  ];
+  for (const step of steps) { document.getElementById('boot-msg').textContent = step.msg; document.getElementById('boot-bar').style.width = step.progress + '%'; if (step.action) step.action(); await new Promise(r => setTimeout(r, 250)); }
+  await new Promise(r => setTimeout(r, 300)); document.getElementById('boot').style.opacity = '0';
+  setTimeout(() => { document.getElementById('boot').style.display = 'none'; if (Observer.current) { Lineage.load(); Klepa.load(); startSession(); } else showLogin(); }, 800);
+}
+
+function showLogin() {
+  const list = document.getElementById('login-obs-list'); list.innerHTML = '';
+  if (Observer.list.length === 0) list.innerHTML = '<div style="color:#555;font-size:10px;text-align:center;padding:16px">нет наблюдателей</div>';
+  else Observer.list.forEach(obs => { const item = document.createElement('div'); item.className = 'obs-item'; item.textContent = obs.name + ' (' + obs.id.slice(-4) + ')'; item.onclick = () => { document.querySelectorAll('.obs-item').forEach(i => i.classList.remove('active')); item.classList.add('active'); document.getElementById('login-new').value = obs.name; }; list.appendChild(item); });
+  document.getElementById('login').style.display = 'flex';
+}
+
+function startSession() {
+  document.getElementById('login').style.display = 'none'; drawState();
+  logEntry('MONOMOD OS v18.0 · ЗАПУСК', 'gold'); logEntry('наблюдатель: ' + Observer.getName(), 'cmd');
+  logEntry('поколение G' + Lineage.current.generation + ' · ' + Lineage.current.source, 'gold');
+  logEntry('граф: ' + Conveyor.G.data.size + ' связей · 26D слов: ' + Conveyor.G.wordVectors.size, '');
+  updateMetrics(); Emergence.refreshUI();
+  setInterval(() => { Conveyor.triStep(); Conveyor.cycleStep(); updateMetrics(); }, 1000);
+}
+
+document.getElementById('login-btn').onclick = () => { const name = document.getElementById('login-new').value.trim(); if (name) { Observer.create(name); startSession(); } };
+document.getElementById('login-new').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+
+const sleepSeed = JSON.parse(localStorage.getItem('mm_sleep_seed') || 'null');
+if (sleepSeed && sleepSeed.payload) { setTimeout(() => { const result = Payload.unfold(sleepSeed.payload); if (result.ok) { logEntry('пробуждение · G' + result.node.generation, 'gold'); } localStorage.removeItem('mm_sleep_seed'); }, 1500); }
+
+window.addEventListener('DOMContentLoaded', boot);
+window.addEventListener('beforeunload', () => { if (Observer.current) { const seed = { observer: Observer.current, timestamp: Date.now(), payload: Payload.generate() }; localStorage.setItem('mm_sleep_seed', JSON.stringify(seed)); } });
+</script>
+</body>
+</html>
