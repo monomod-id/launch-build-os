@@ -2,15 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#050508">
 <title>MONOMOD · v19.0</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#050508;color:#c8c8d4;font-family:'Courier New',monospace}
-body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
-#boot,#login{position:fixed;inset:0;background:#050508;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.8s}
+#boot,#login{position:fixed;inset:0;background:#050508;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000}
 #boot .logo{font-size:20px;letter-spacing:6px;color:#4dd0c7;margin-bottom:16px}
 #boot .bar{width:160px;height:2px;background:#1c1c26;overflow:hidden}
 #boot .bar-fill{height:100%;background:#4dd0c7;width:0%;transition:width 0.3s}
@@ -19,28 +17,15 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
 #login h2{color:#4dd0c7;letter-spacing:3px;margin-bottom:16px;font-size:12px}
 #login .obs-list{max-height:35vh;overflow-y:auto;width:100%;max-width:280px}
 #login .obs-item{padding:10px;margin:4px 0;background:#0a0a12;border:1px solid #1c1c26;border-radius:3px;cursor:pointer;font-size:11px}
-#login .obs-item:hover{border-color:#4dd0c7}
-#login .obs-item.active{border-color:#ffd700;color:#ffd700}
 #login input{margin-top:12px;padding:10px;background:#0a0a12;border:1px solid #1c1c26;color:#c8c8d4;font:inherit;width:100%;max-width:280px;font-size:11px;outline:none}
-#login button{margin-top:10px;padding:10px 24px;background:transparent;border:1px solid #4dd0c7;color:#4dd0c7;font:inherit;cursor:pointer;font-size:11px;letter-spacing:2px}
-#h-slider{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#login button{margin-top:10px;padding:10px 24px;background:transparent;border:1px solid #4dd0c7;color:#4dd0c7;font:inherit;cursor:pointer;font-size:11px}
+#h-slider{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory}
 #h-slider::-webkit-scrollbar{display:none}
 .tab{flex:0 0 100vw;height:100%;scroll-snap-align:start;display:flex;flex-direction:column;border-right:1px solid #14141c;position:relative}
-#tab-state{align-items:center;justify-content:center}
-#state-canvas{width:100%;height:100%;position:absolute;top:0;left:0}
-.state-label{position:absolute;top:20px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:3px;color:#4dd0c7;z-index:2}
-.state-info{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:9px;color:#555;z-index:2;line-height:1.6}
-.state-info b{color:#ffd700}
-#klepa-status{position:absolute;bottom:40px;left:0;right:0;text-align:center;font-size:9px;color:#8b5cf6;z-index:2}
-#klepa-status b{color:#a78bfa}
-.v-slider{display:flex;flex-direction:column;height:100%;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
-.v-page{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;padding:16px;padding-top:calc(40px + env(safe-area-inset-top))}
-.v-top{flex:1;display:flex;flex-direction:column}
-.v-input{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0a12;border:1px solid #ffd700;color:#ffd700;font-size:15px;text-align:center;line-height:1.6;word-break:break-word;border-radius:4px;min-height:120px}
+.v-slider{display:flex;flex-direction:column;height:100%;overflow-y:auto;scroll-snap-type:y mandatory}
+.v-page{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;padding:16px}
+.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0a12;border:1px solid #ffd700;color:#ffd700;font-size:15px;text-align:center;border-radius:4px;min-height:120px}
 .answer-meta{font-size:9px;color:#555;margin-top:10px;text-align:center}
-.translation-box{margin-top:10px;padding:8px;background:#0a0a12;border:1px solid #14141c;border-radius:4px;font-size:9px;display:none}
-.translation-box .title{color:#8b5cf6;letter-spacing:2px;margin-bottom:4px}
 .log-title{font-size:10px;letter-spacing:2px;color:#4dd0c7;margin-bottom:10px}
 .log-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:10px;font-size:9px}
 .log-metrics .m{padding:5px;background:#0a0a12;border:1px solid #14141c;border-radius:2px}
@@ -51,12 +36,13 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
 .log-box .gold{color:#ffd700}.log-box .cmd{color:#4dd0c7}.log-box .err{color:#ff4757}.log-box .purple{color:#a78bfa}
 .input-label{font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;text-align:center}
 .input-field{width:100%;padding:12px;background:#0a0a12;border:1px solid #1c1c26;color:#c8c8d4;font:inherit;font-size:13px;outline:none;border-radius:3px}
-.input-field:focus{border-color:#4dd0c7}
-#nav{position:fixed;bottom:calc(8px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;background:rgba(5,5,8,0.8);padding:5px 8px;border-radius:16px;border:1px solid #1c1c26}
+#nav{position:fixed;bottom:calc(40px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;background:rgba(5,5,8,0.8);padding:5px 8px;border-radius:16px;border:1px solid #1c1c26}
 .dot{width:5px;height:5px;border-radius:50%;background:#333;cursor:pointer;transition:0.2s}
 .dot.active{background:#4dd0c7;width:16px;border-radius:3px}
-#top-status{position:fixed;top:calc(6px + env(safe-area-inset-top));right:8px;font-size:8px;color:#555;z-index:10;background:rgba(5,5,8,0.7);padding:3px 6px;border-radius:8px}
-#top-status b{color:#ffd700}
+#global-input{position:fixed;bottom:0;left:0;right:0;z-index:20;background:rgba(5,5,8,0.95);padding:10px;border-top:1px solid #1c1c26}
+#state-label{position:absolute;top:20px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:3px;color:#4dd0c7;z-index:2}
+.state-info{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:9px;color:#555;z-index:2;line-height:1.6}
+.state-info b{color:#ffd700}
 </style>
 </head>
 <body>
@@ -75,57 +61,27 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
 </div>
 
 <div id="h-slider">
-  <div class="tab" id="tab-state">
-    <canvas id="state-canvas"></canvas>
-    <div class="state-label" id="state-label">ТИШИНА</div>
-    <div class="state-info">
-      δ: <b id="s-delta">0.000</b> · y: <b id="s-y">110.347</b><br>
-      фаза: <b id="s-phase">collect</b> · L<b id="s-level">0</b><br>
-      поколение: <b id="s-gen">G0</b> · <b id="s-edges">0</b> связей
-    </div>
-    <div id="klepa-status">клепа: <b id="klepa-mood">наблюдает</b> · энергия: <b id="klepa-energy">0.50</b></div>
-  </div>
-
-  <div class="tab" id="tab-answer">
-    <div class="v-slider">
-      <div class="v-page v-top">
-        <div class="answer-box" id="answer-box">тишина...</div>
-        <div class="answer-meta" id="answer-meta"></div>
-        <div class="translation-box" id="translation-box">
-          <div class="title">ПЕРЕВОД</div>
-          <div style="color:#555">человеческий: <span id="trans-human" style="color:#c8c8d4"></span></div>
-          <div style="color:#555;margin-top:4px">машинный: <span id="trans-dsl" style="color:#4dd0c7"></span></div>
-        </div>
-        <div class="answer-hint">↑ свайп для ввода</div>
-      </div>
-      <div class="v-page v-input">
-        <div class="input-label">ИМПУЛЬС</div>
-        <input class="input-field" id="input-2" placeholder="свет был до тьма" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      </div>
+  <div class="tab" id="tab-0">
+    <div class="v-slider" id="vslider-0">
+      <div class="v-page"><canvas id="cv-0" style="width:100%;height:70vh"></canvas><div style="text-align:center;font-size:10px;color:#4dd0c7;letter-spacing:3px;margin-top:10px">СБОР</div></div>
+      <div class="v-page"><div style="font-size:10px;color:#4dd0c7;letter-spacing:2px;margin-bottom:10px">УЗЛЫ</div><div id="nodes-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#4dd0c7;letter-spacing:2px;margin-bottom:10px">СВЯЗИ</div><div id="edges-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#8b5cf6;letter-spacing:2px;margin-bottom:10px">КЛЕПА</div><div id="klepa-display" style="font-size:12px;color:#c8c8d4;line-height:1.8"></div></div>
     </div>
   </div>
-
-  <div class="tab" id="tab-log">
-    <div class="v-slider">
-      <div class="v-page v-top">
-        <div class="log-title">КОНВЕЙЕР</div>
-        <div class="log-metrics">
-          <div class="m"><span class="k">Ψ</span><span class="v" id="l-psi">.36</span></div>
-          <div class="m"><span class="k">Ω</span><span class="v" id="l-omega">.33</span></div>
-          <div class="m"><span class="k">Λ</span><span class="v" id="l-lambda">.31</span></div>
-          <div class="m"><span class="k">δ</span><span class="v" id="l-delta">0.000</span></div>
-          <div class="m"><span class="k">y</span><span class="v" id="l-y">110.347</span></div>
-          <div class="m"><span class="k">связей</span><span class="v" id="l-edges">0</span></div>
-          <div class="m"><span class="k">фаза</span><span class="v" id="l-phase">collect</span></div>
-          <div class="m"><span class="k">поколение</span><span class="v" id="l-gen">G0</span></div>
-          <div class="m"><span class="k">26D слов</span><span class="v" id="l-vectors">0</span></div>
-        </div>
-        <div class="log-box" id="log-box"></div>
-      </div>
-      <div class="v-page v-input">
-        <div class="input-label">КОМАНДА</div>
-        <input class="input-field" id="input-3" placeholder="help · status · fold" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      </div>
+  <div class="tab" id="tab-1">
+    <div class="v-slider" id="vslider-1">
+      <div class="v-page"><div class="answer-box" id="answer-box">тишина...</div><div class="answer-meta" id="answer-meta"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#ffd700;letter-spacing:2px;margin-bottom:10px">ПЕРЕВОД</div><div id="translation-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#ffd700;letter-spacing:2px;margin-bottom:10px">ЭМЕРДЖЕНТНОСТЬ</div><div id="emergence-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
+    </div>
+  </div>
+  <div class="tab" id="tab-2">
+    <div class="v-slider" id="vslider-2">
+      <div class="v-page"><div class="log-title">КОНВЕЙЕР</div><div class="log-metrics"><div class="m"><span class="k">Ψ</span><span class="v" id="l-psi">.36</span></div><div class="m"><span class="k">Ω</span><span class="v" id="l-omega">.33</span></div><div class="m"><span class="k">Λ</span><span class="v" id="l-lambda">.31</span></div><div class="m"><span class="k">δ</span><span class="v" id="l-delta">0.000</span></div><div class="m"><span class="k">y</span><span class="v" id="l-y">110.347</span></div><div class="m"><span class="k">связей</span><span class="v" id="l-edges">0</span></div><div class="m"><span class="k">фаза</span><span class="v" id="l-phase">collect</span></div><div class="m"><span class="k">поколение</span><span class="v" id="l-gen">G0</span></div><div class="m"><span class="k">26D</span><span class="v" id="l-vectors">0</span></div></div></div>
+      <div class="v-page"><div class="log-title">ЖУРНАЛ</div><div class="log-box" id="log-box"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#8b5cf6;letter-spacing:2px;margin-bottom:10px">РОДОСЛОВНАЯ</div><div id="lineage-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:#4dd0c7;letter-spacing:2px;margin-bottom:10px">СПРАВКА</div><div style="font-size:10px;color:#555;line-height:1.8"><div><span style="color:#4dd0c7">status</span> — метрики</div><div><span style="color:#4dd0c7">fold</span> — свёртка</div><div><span style="color:#4dd0c7">payload generate</span> — экспорт</div><div><span style="color:#4dd0c7">clear</span> — очистить лог</div></div></div>
     </div>
   </div>
 </div>
@@ -136,35 +92,34 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
   <div class="dot" data-idx="2"></div>
 </div>
 
-<div id="top-status">L<b id="t-level">0</b> · G<b id="t-gen">0</b> · <b id="t-edges">0</b></div>
+<div id="global-input">
+  <input class="input-field" id="global-input-field" placeholder="свет был до тьма · сделать клепа радостная · status" autocomplete="off">
+</div>
 
 <script>
 "use strict";
 
 // ═══════════════════════════════════════════════════════════════
-// СЛОВАРИ · Упакованы в строки
+// СЛОВАРИ
 // ═══════════════════════════════════════════════════════════════
-const DICT_TYPES = `before=был до|предшествовал
+const DICT_TYPES=`before=был до|предшествовал
 after=был после|следовал за
 inverse=наоборот|противоположен
 mirror=отражение|зеркалит
 linear=связан с|соединён с
 first=рождает|создаёт`;
-
-const DICT_PLANES = `прямая=в прямом направлении|линейно
+const DICT_PLANES=`прямая=в прямом направлении|линейно
 наоборот=в противоположном направлении|инверсно
 зеркальная=в зеркальном отражении|симметрично
 изнутри=из внутреннего пространства|глубинно
 между=в пространстве между|медиативно
 никак=вне пространства|трансцендентно`;
-
-const DICT_MOODS = `neutral=нейтральное
+const DICT_MOODS=`neutral=нейтральное
 curious=любопытное
 concerned=обеспокоенное
 joyful=радостное
 silent=тихое`;
-
-const DICT_MOOD_SYNONYMS = `радостная=joyful
+const DICT_MOOD_SYNONYMS=`радостная=joyful
 радостный=joyful
 любопытная=curious
 любопытный=curious
@@ -175,250 +130,155 @@ const DICT_MOOD_SYNONYMS = `радостная=joyful
 тихая=silent
 тихий=silent`;
 
-// Парсер словарей
-const Dict = {
-  parse(str, hasHuman) {
-    const d = {};
-    str.split('\n').forEach(line => {
-      const [k, v] = line.split('=');
-      if (!v) return;
-      if (hasHuman) {
-        const [ru, human] = v.split('|');
-        d[k.trim()] = { ru: ru.trim(), human: human?.trim() };
-      } else {
-        d[k.trim()] = v.trim();
-      }
+const Dict={
+  parse(str,hasHuman){
+    const d={};
+    str.split('\n').forEach(line=>{
+      const[k,v]=line.split('=');
+      if(!v)return;
+      if(hasHuman){const[ru,human]=v.split('|');d[k.trim()]={ru:ru.trim(),human:human?.trim()};}
+      else d[k.trim()]=v.trim();
     });
     return d;
   },
-  load() {
-    return {
-      types: this.parse(DICT_TYPES, true),
-      planes: this.parse(DICT_PLANES, true),
-      moods: this.parse(DICT_MOODS, false),
-      moodSynonyms: this.parse(DICT_MOOD_SYNONYMS, false)
-    };
-  }
+  load(){return{types:this.parse(DICT_TYPES,true),planes:this.parse(DICT_PLANES,true),moods:this.parse(DICT_MOODS,false),moodSynonyms:this.parse(DICT_MOOD_SYNONYMS,false)};}
 };
-
-const D = Dict.load();
+const D=Dict.load();
 
 // ═══════════════════════════════════════════════════════════════
 // 26D ВЕКТОРЫ
 // ═══════════════════════════════════════════════════════════════
-const V26 = {
-  axes: 'абвгдежзийклмнопрстуфхцчшщэ'.split(''),
-  encode(w) {
-    const v = new Array(26).fill(0);
-    w = w.toLowerCase();
-    for (let i = 0; i < w.length; i++) {
-      const idx = this.axes.indexOf(w[i]);
-      if (idx >= 0) v[idx]++;
-    }
-    const sum = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
-    return v.map(x => x / sum);
+const V26={
+  axes:'абвгдежзийклмнопрстуфхцчшщэ'.split(''),
+  encode(w){
+    const v=new Array(26).fill(0);w=w.toLowerCase();
+    for(let i=0;i<w.length;i++){const idx=this.axes.indexOf(w[i]);if(idx>=0)v[idx]++;}
+    const sum=Math.sqrt(v.reduce((s,x)=>s+x*x,0))||1;
+    return v.map(x=>x/sum);
   },
-  sim(a, b) {
-    let dot = 0, ma = 0, mb = 0;
-    for (let i = 0; i < 26; i++) { dot += a[i]*b[i]; ma += a[i]*a[i]; mb += b[i]*b[i]; }
-    return dot / (Math.sqrt(ma) * Math.sqrt(mb) || 1);
+  sim(a,b){
+    let dot=0,ma=0,mb=0;
+    for(let i=0;i<26;i++){dot+=a[i]*b[i];ma+=a[i]*a[i];mb+=b[i]*b[i];}
+    return dot/(Math.sqrt(ma)*Math.sqrt(mb)||1);
   },
-  proj(v) {
-    let x = 0, y = 0;
-    for(let i=0; i<26; i++) {
-      x += [0,4,9,14,19].includes(i) ? v[i] : -v[i];
-      y += (i - 12) * v[i];
-    }
-    return { x, y };
+  proj(v){
+    let x=0,y=0;
+    for(let i=0;i<26;i++){x+=[0,4,9,14,19].includes(i)?v[i]:-v[i];y+=(i-12)*v[i];}
+    return{x,y};
   }
 };
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // КОНТЕКСТ
 // ═══════════════════════════════════════════════════════════════
-const Ctx = {
-  h: [],
-  add(w) {
-    if (!w || w.length < 3) return;
-    this.h = this.h.filter(x => x !== w);
-    this.h.unshift(w);
-    if (this.h.length > 3) this.h.pop();
-  },
-  get() { return this.h; }
-};
+const Ctx={h:[],add(w){if(!w||w.length<3)return;this.h=this.h.filter(x=>x!==w);this.h.unshift(w);if(this.h.length>3)this.h.pop();},get(){return this.h;}};
 
 // ═══════════════════════════════════════════════════════════════
 // ГРАФ
 // ═══════════════════════════════════════════════════════════════
-const G = {
-  data: new Map(),
-  vecs: new Map(),
-  load() {
-    const k = 'mm_g_' + Obs.cur;
-    try { const r = localStorage.getItem(k); if (r) this.data = new Map(JSON.parse(r)); } catch(e){}
+const G={
+  data:new Map(),vecs:new Map(),activeTab:0,
+  load(){const k='mm_g_'+Obs.cur;try{const r=localStorage.getItem(k);if(r)this.data=new Map(JSON.parse(r));}catch(e){}},
+  save(){const k='mm_g_'+Obs.cur;localStorage.setItem(k,JSON.stringify(Array.from(this.data.entries())));},
+  vec(w){if(!this.vecs.has(w))this.vecs.set(w,V26.encode(w));return this.vecs.get(w);},
+  link(a,b,type,plane,tab){
+    const tabId=tab!==undefined?tab:this.activeTab;
+    const k=[a,b,tabId].sort().join('→');
+    const e=this.data.get(k)||{w:0.3,c:0,type:type||'linear',plane:plane||'прямая',t:Date.now(),tab:tabId};
+    e.w=Math.min(1,e.w*1.05);e.c++;e.t=Date.now();
+    this.data.set(k,e);this.save();
   },
-  save() {
-    const k = 'mm_g_' + Obs.cur;
-    localStorage.setItem(k, JSON.stringify(Array.from(this.data.entries())));
-  },
-  vec(w) {
-    if (!this.vecs.has(w)) this.vecs.set(w, V26.encode(w));
-    return this.vecs.get(w);
-  },
-  link(a, b, type, plane) {
-    const k = [a,b].sort().join('→');
-    const e = this.data.get(k) || { w: 0.3, c: 0, type: type||'linear', plane: plane||'прямая', t: Date.now() };
-    e.w = Math.min(1, e.w * 1.05); e.c++; e.t = Date.now();
-    this.data.set(k, e); this.save();
-  },
-  unlink(a, b) {
-    const k = [a,b].sort().join('→');
-    this.data.delete(k); this.save();
-  },
-  topW() { let m = 0; this.data.forEach(l => { if (l.w > m) m = l.w; }); return m; }
+  unlink(a,b,tab){const tabId=tab!==undefined?tab:this.activeTab;const k=[a,b,tabId].sort().join('→');this.data.delete(k);this.save();},
+  forTab(tabId){const result=new Map();this.data.forEach((v,k)=>{if(v.tab===tabId)result.set(k,v);});return result;},
+  countForTab(tabId){let c=0;this.data.forEach(v=>{if(v.tab===tabId)c++;});return c;},
+  topW(){let m=0;this.data.forEach(l=>{if(l.w>m)m=l.w;});return m;},
+  topWForTab(tabId){let m=0;this.data.forEach(l=>{if(l.tab===tabId&&l.w>m)m=l.w;});return m;}
 };
 
 // ═══════════════════════════════════════════════════════════════
 // КЛЕПА
-// ═══════════════════════════════════════════════════════════════
-const K = {
-  s: { mood: 'neutral', energy: 0.5 },
-  save() { localStorage.setItem('mm_k_' + Obs.cur, JSON.stringify(this.s)); },
-  load() { try { const s = JSON.parse(localStorage.getItem('mm_k_' + Obs.cur)); if (s) this.s = { ...this.s, ...s }; } catch(e){} }
+// ══════════════════════════════════════════════════════════════
+const Klepa={
+  state:{mood:'neutral',energy:0.5},
+  save(){localStorage.setItem('mm_k_'+Obs.cur,JSON.stringify(this.state));},
+  load(){try{const s=JSON.parse(localStorage.getItem('mm_k_'+Obs.cur));if(s)this.state={...this.state,...s};}catch(e){}}
 };
 
 // ═══════════════════════════════════════════════════════════════
 // РОДОСЛОВНАЯ
 // ═══════════════════════════════════════════════════════════════
-const Lin = {
-  cur: null,
-  load() {
-    const k = 'mm_lin_' + Obs.cur;
-    try { this.cur = JSON.parse(localStorage.getItem(k)); } catch(e){}
-    if (!this.cur) {
-      this.cur = { id: 'R-' + C.hash(Obs.cur).slice(0,8), gen: 0, src: 'origin', t: Date.now() };
-      this.save();
-    }
+const Lin={
+  cur:null,
+  load(){
+    const k='mm_lin_'+Obs.cur;
+    try{this.cur=JSON.parse(localStorage.getItem(k));}catch(e){}
+    if(!this.cur){this.cur={id:'R-'+C.hash(Obs.cur).slice(0,8),gen:0,src:'origin',t:Date.now()};this.save();}
   },
-  save() { localStorage.setItem('mm_lin_' + Obs.cur, JSON.stringify(this.cur)); },
-  fold() {
-    const p = this.cur;
-    this.cur = { id: 'N-' + C.hash(p.id + Date.now()).slice(0,8), gen: p.gen + 1, src: 'fold', t: Date.now() };
-    this.save(); return this.cur;
-  }
+  save(){localStorage.setItem('mm_lin_'+Obs.cur,JSON.stringify(this.cur));},
+  fold(){const p=this.cur;this.cur={id:'N-'+C.hash(p.id+Date.now()).slice(0,8),gen:p.gen+1,src:'fold',t:Date.now()};this.save();return this.cur;}
 };
 
 // ═══════════════════════════════════════════════════════════════
 // КОНВЕЙЕР
 // ═══════════════════════════════════════════════════════════════
-const C = {
-  s: { y: 110.347, phase: 0, spiral: 0, state: 'idle' },
-  tri: { p: 0.36, l: 0.31, o: 0.33 },
-  hash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h).toString(16).toUpperCase().padStart(8, '0'); },
-  K(y) { return (y >= 68 && y <= 194) ? y : 68 + ((y - 68) % 126); },
-  triStep() {
-    const t = 1/3;
-    this.tri.p += (0 - 0.5*(this.tri.p-t))*0.01;
-    this.tri.o += (0 - 0.5*(this.tri.o-t))*0.01;
-    this.tri.l += (0 - 0.5*(this.tri.l-t))*0.01;
-    const s = this.tri.p + this.tri.o + this.tri.l;
-    this.tri.p /= s; this.tri.o /= s; this.tri.l /= s;
-  },
-  dev() { return Math.max(Math.abs(this.tri.p-1/3), Math.abs(this.tri.o-1/3), Math.abs(this.tri.l-1/3)); },
-  cycleStep() { this.s.phase = (this.s.phase + 1) % 7; },
-  PH: ['collect','filter','route','process','reflect','crystal','release'],
-  
-  process(raw) {
-    this.cycleStep(); this.triStep();
-    const words = raw.toLowerCase().replace(/[^\w\sа-яА-ЯёЁ]/g, '').split(/\s+/).filter(w => w.length > 2);
-    if (words.length === 0) return null;
-    
-    this.s.state = 'collecting';
-    words.forEach((a, i) => words.slice(i+1).forEach(b => G.link(a, b, 'linear', 'прямая')));
-    this.s.state = 'processing';
-    
-    const best = words[0];
-    const edges = G.data.size;
-    let meaning = best;
-    let form = best;
-    let action = '🔗 строй связи';
-    
-    this.s.y = this.K(this.s.y + (Math.random() - 0.5) * 20);
-    const topW = G.topW();
-    if (topW > 0.9 && edges > 20) this.s.state = 'resonance';
-    else this.s.state = 'collecting';
-    
+const C={
+  tabs:[{y:110.347,phase:0,spiral:0,state:'idle',name:'СБОР'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОБРАБОТКА'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОТРАЖЕНИЕ'}],
+  activeTab:0,tri:{p:0.36,l:0.31,o:0.33},
+  hash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(16).toUpperCase().padStart(8,'0');},
+  K(y){return(y>=68&&y<=194)?y:68+((y-68)%126);},
+  triStep(){const t=1/3;this.tri.p+=(0-0.5*(this.tri.p-t))*0.01;this.tri.o+=(0-0.5*(this.tri.o-t))*0.01;this.tri.l+=(0-0.5*(this.tri.l-t))*0.01;const s=this.tri.p+this.tri.o+this.tri.l;this.tri.p/=s;this.tri.o/=s;this.tri.l/=s;},
+  dev(){return Math.max(Math.abs(this.tri.p-1/3),Math.abs(this.tri.o-1/3),Math.abs(this.tri.l-1/3));},
+  switchTab(idx){this.activeTab=idx;G.activeTab=idx;},
+  cur(){return this.tabs[this.activeTab];},
+  cycleStep(){const tab=this.cur();tab.phase=(tab.phase+1)%7;},
+  PH:['collect','filter','route','process','reflect','crystal','release'],
+  process(raw){
+    const tab=this.cur();this.cycleStep();this.triStep();
+    const words=raw.toLowerCase().replace(/[^\w\sа-яА-ЯёЁ]/g,'').split(/\s+/).filter(w=>w.length>2);
+    if(words.length===0)return null;
+    tab.state='collecting';
+    words.forEach((a,i)=>words.slice(i+1).forEach(b=>G.link(a,b,'linear','прямая',this.activeTab)));
+    tab.state='processing';
+    const best=words[0];const edges=G.countForTab(this.activeTab);
+    let meaning=best,form=best,action=' строй связи';
+    tab.y=this.K(tab.y+(Math.random()-0.5)*20);
+    const topW=G.topWForTab(this.activeTab);
+    if(topW>0.9&&edges>20)tab.state='resonance';else tab.state='collecting';
     Ctx.add(best);
-    
-    const inputVec = words.reduce((acc, w) => { const v = G.vec(w); return acc.map((x, i) => x + v[i]); }, new Array(26).fill(0)).map(x => x / words.length);
-    const proj = V26.proj(inputVec);
-    
-    return { meaning, form, action, edges, topW, vector: proj };
+    const inputVec=words.reduce((acc,w)=>{const v=G.vec(w);return acc.map((x,i)=>x+v[i]);},new Array(26).fill(0)).map(x=>x/words.length);
+    const proj=V26.proj(inputVec);
+    return{meaning,form,action,edges,topW,vector:proj,tab:this.activeTab};
   }
 };
 
 // ═══════════════════════════════════════════════════════════════
 // ПАТЧ-ДВИЖОК
 // ═══════════════════════════════════════════════════════════════
-const P = {
-  async exec(code, vars = {}) {
-    const cmds = code.split('|').map(c => c.trim()).filter(Boolean);
-    const res = [];
-    for (const cmd of cmds) {
-      const ci = cmd.indexOf(':');
-      if (ci < 0) continue;
-      const type = cmd.substring(0, ci);
-      const args = cmd.substring(ci + 1).split(':');
-      try {
-        const r = await this.run(type, args, vars);
-        res.push(r);
-      } catch(e) { log('ошибка: ' + e.message, 'err'); }
+const P={
+  async exec(code,vars={}){
+    const cmds=code.split('|').map(c=>c.trim()).filter(Boolean);
+    const res=[];
+    for(const cmd of cmds){
+      const ci=cmd.indexOf(':');if(ci<0)continue;
+      const type=cmd.substring(0,ci);const args=cmd.substring(ci+1).split(':');
+      try{const r=await this.run(type,args,vars);res.push(r);}catch(e){log('ошибка: '+e.message,'err');}
     }
     return res;
   },
-  
-  async run(type, args, vars) {
-    const sub = (s) => s.replace(/\{(\w+)\}/g, (m, k) => vars[k] || m);
-    
-    switch(type) {
-      case 'G': {
-        const edge = sub(args[0]);
-        if (edge.includes('~')) {
-          const [a, b] = edge.split('~');
-          G.unlink(a, b);
-          return { act: 'remove', edge };
-        }
-        const [a, b] = edge.split('→');
-        const t = args[1] || 'linear';
-        const p = args[2] || 'прямая';
-        G.link(a, b, t, p);
-        return { act: 'create', edge: `${a}→${b}`, type: t, plane: p };
+  async run(type,args,vars){
+    const sub=(s)=>s.replace(/\{(\w+)\}/g,(m,k)=>vars[k]||m);
+    switch(type){
+      case'G':{
+        const edge=sub(args[0]);
+        if(edge.includes('~')){const[a,b]=edge.split('~');G.unlink(a,b);return{act:'remove',edge};}
+        const[a,b]=edge.split('→');const t=args[1]||'linear';const p=args[2]||'прямая';
+        G.link(a,b,t,p);return{act:'create',edge:`${a}→${b}`,type:t,plane:p};
       }
-      case 'K': {
-        K.s.mood = args[0];
-        K.s.energy = args[1] ? parseFloat(args[1]) : 0.5;
-        K.save(); upd();
-        return { act: 'klepa', mood: args[0], energy: K.s.energy };
-      }
-      case 'S': {
-        C.s.spiral = parseInt(args[0]);
-        upd();
-        return { act: 'spiral', level: C.s.spiral };
-      }
-      case 'L': {
-        if (args[0] === 'fold') {
-          const n = Lin.fold();
-          return { act: 'lineage', gen: n.gen };
-        }
-        return { act: 'noop' };
-      }
-      case 'V': {
-        const [n, v] = args[0].split('=');
-        vars[n] = sub(v);
-        return { act: 'var', name: n, value: vars[n] };
-      }
-      default:
-        return { act: 'unknown', type };
+      case'K':{Klepa.state.mood=args[0];Klepa.state.energy=args[1]?parseFloat(args[1]):0.5;Klepa.save();upd();return{act:'klepa',mood:args[0],energy:Klepa.state.energy};}
+      case'S':{C.cur().spiral=parseInt(args[0]);upd();return{act:'spiral',level:C.cur().spiral};}
+      case'L':{if(args[0]==='fold'){const n=Lin.fold();return{act:'lineage',gen:n.gen};}return{act:'noop'};}
+      case'V':{const[n,v]=args[0].split('=');vars[n]=sub(v);return{act:'var',name:n,value:vars[n]};}
+      default:return{act:'unknown',type};
     }
   }
 };
@@ -426,49 +286,28 @@ const P = {
 // ═══════════════════════════════════════════════════════════════
 // ПЕРЕВОДЧИК
 // ═══════════════════════════════════════════════════════════════
-const T = {
-  patterns: [
-    { re: /(\S+)\s+(?:был(?:о|а|и)?\s+)?до\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:before:прямая` },
-    { re: /(\S+)\s+(?:был(?:о|а|и)?\s+)?после\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:after:прямая` },
-    { re: /(\S+)\s+(?:является\s+)?наоборот\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:inverse:наоборот` },
-    { re: /(\S+)\s+внутри\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:linear:изнутри` },
-    { re: /(\S+)\s+разрушает?\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:inverse:наоборот` },
-    { re: /(\S+)\s+хранит\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:linear:изнутри` },
-    { re: /(\S+)\s+рождает?\s+(\S+)/, act: (m) => `G:${m[1]}→${m[2]}:first:прямая` },
-    { re: /удалить\s+связь\s+между\s+(\S+)\s+и\s+(\S+)/, act: (m) => `G:${m[1]}~${m[2]}` },
-    { re: /сделать\s+клепа\s+(\S+)/, act: (m) => `K:${D.moodSynonyms[m[1]] || 'neutral'}:0.9` },
-    { re: /установить\s+спираль\s+на\s+(\d+)/, act: (m) => `S:${m[1]}` }
+const T={
+  patterns:[
+    {re:/(\S+)\s+(?:был(?:о|а|и)?\s+)?до\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:before:прямая`},
+    {re:/(\S+)\s+(?:был(?:о|а|и)?\s+)?после\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:after:прямая`},
+    {re:/(\S+)\s+(?:является\s+)?наоборот\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:inverse:наоборот`},
+    {re:/(\S+)\s+внутри\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:linear:изнутри`},
+    {re:/(\S+)\s+разрушает?\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:inverse:наоборот`},
+    {re:/(\S+)\s+хранит\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:linear:изнутри`},
+    {re:/(\S+)\s+рождает?\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:first:прямая`},
+    {re:/удалить\s+связь\s+между\s+(\S+)\s+и\s+(\S+)/,act:(m)=>`G:${m[1]}~${m[2]}`},
+    {re:/сделать\s+клепа\s+(\S+)/,act:(m)=>`K:${D.moodSynonyms[m[1]]||'neutral'}:0.9`},
+    {re:/установить\s+спираль\s+на\s+(\d+)/,act:(m)=>`S:${m[1]}`}
   ],
-  
-  toDSL(text) {
-    for (const p of this.patterns) {
-      const m = text.match(p.re);
-      if (m) return p.act(m);
-    }
-    return null;
-  },
-  
-  toHuman(dsl) {
-    const cmds = dsl.split('|').map(c => c.trim()).filter(Boolean);
-    return cmds.map(cmd => {
-      const ci = cmd.indexOf(':');
-      if (ci < 0) return cmd;
-      const type = cmd.substring(0, ci);
-      const args = cmd.substring(ci + 1).split(':');
-      
-      if (type === 'G') {
-        const edge = args[0];
-        if (edge.includes('~')) {
-          const [a, b] = edge.split('~');
-          return `удалить связь между ${a} и ${b}`;
-        }
-        const [a, b] = edge.split('→');
-        const t = args[1] || 'linear';
-        const p = args[2] || 'прямая';
-        return `${a} ${D.types[t]?.ru || 'связан с'} ${b}`;
-      }
-      if (type === 'K') return `Клепа: ${D.moods[args[0]] || args[0]}`;
-      if (type === 'S') return `спираль: уровень ${args[0]}`;
+  toDSL(text){for(const p of this.patterns){const m=text.match(p.re);if(m)return p.act(m);}return null;},
+  toHuman(dsl){
+    const cmds=dsl.split('|').map(c=>c.trim()).filter(Boolean);
+    return cmds.map(cmd=>{
+      const ci=cmd.indexOf(':');if(ci<0)return cmd;
+      const type=cmd.substring(0,ci);const args=cmd.substring(ci+1).split(':');
+      if(type==='G'){const edge=args[0];if(edge.includes('~')){const[a,b]=edge.split('~');return`удалить связь между ${a} и ${b}`;}const[a,b]=edge.split('→');const t=args[1]||'linear';return`${a} ${D.types[t]?.ru||'связан с'} ${b}`;}
+      if(type==='K')return`Клепа: ${D.moods[args[0]]||args[0]}`;
+      if(type==='S')return`спираль: уровень ${args[0]}`;
       return cmd;
     }).join(', ');
   }
@@ -477,209 +316,174 @@ const T = {
 // ═══════════════════════════════════════════════════════════════
 // НАБЛЮДАТЕЛЬ
 // ═══════════════════════════════════════════════════════════════
-const Obs = {
-  cur: null, list: [],
-  init() {
-    const sid = localStorage.getItem('mm_obs_cur');
-    const slist = localStorage.getItem('mm_obs_list');
-    if (slist) { try { this.list = JSON.parse(slist); } catch(e){} }
-    if (sid && this.list.some(u => u.id === sid)) this.cur = sid;
-  },
-  create(name) {
-    const id = 'OBS-' + C.hash(name);
-    const ex = this.list.find(u => u.id === id);
-    if (ex) { this.cur = id; this.saveList(); return; }
-    this.list.push({ id, name, t: Date.now() });
-    this.cur = id; this.saveList();
-  },
-  saveList() { localStorage.setItem('mm_obs_list', JSON.stringify(this.list)); },
-  name() { const u = this.list.find(x => x.id === this.cur); return u ? u.name : '—'; }
+const Obs={
+  cur:null,list:[],
+  init(){const sid=localStorage.getItem('mm_obs_cur');const slist=localStorage.getItem('mm_obs_list');if(slist){try{this.list=JSON.parse(slist);}catch(e){}}if(sid&&this.list.some(u=>u.id===sid))this.cur=sid;},
+  create(name){const id='OBS-'+C.hash(name);const ex=this.list.find(u=>u.id===id);if(ex){this.cur=id;this.saveList();return;}this.list.push({id,name,t:Date.now()});this.cur=id;this.saveList();},
+  saveList(){localStorage.setItem('mm_obs_list',JSON.stringify(this.list));},
+  name(){const u=this.list.find(x=>x.id===this.cur);return u?u.name:'—';}
+};
+
+// ═══════════════════════════════════════════════════════════════
+// МАТРИЦА НАВИГАЦИИ
+// ═══════════════════════════════════════════════════════════════
+const Matrix={tabs:3,pages:[4,3,4],currentTab:0,currentPage:[0,0,0],
+  switchTab(idx){if(idx<0||idx>=this.tabs)return;this.currentTab=idx;C.switchTab(idx);hs.children[idx].scrollIntoView({behavior:'smooth'});this.updateIndicators();upd();},
+  updateIndicators(){const mainDots=document.querySelectorAll('#nav .dot');mainDots.forEach((d,i)=>{d.className='dot'+(i===this.currentTab?' active':'');});}
 };
 
 // ═══════════════════════════════════════════════════════════════
 // UI
 // ═══════════════════════════════════════════════════════════════
-const cv = document.getElementById('state-canvas');
-const ctx = cv.getContext('2d');
-let anim = 'idle', time = 0;
+const cv=document.getElementById('cv-0');
+const ctx=cv.getContext('2d');
+let anim='idle',time=0;
 
-function resize() { cv.width = cv.parentElement.clientWidth; cv.height = cv.parentElement.clientHeight; }
-resize(); window.addEventListener('resize', resize);
+function resize(){cv.width=cv.parentElement.clientWidth;cv.height=cv.parentElement.clientHeight||window.innerHeight*0.7;}
+resize();window.addEventListener('resize',resize);
 
-function draw() {
-  time += 0.016;
-  const w = cv.width, h = cv.height, cx = w/2, cy = h/2;
-  ctx.fillStyle = 'rgba(5,5,8,0.15)'; ctx.fillRect(0, 0, w, h);
-  
-  let color, radius;
-  switch(anim) {
-    case 'idle': color = '#333'; radius = 40; break;
-    case 'collecting': color = '#4dd0c7'; radius = 50 + Math.sin(time*2)*10; break;
-    case 'processing': color = '#8b5cf6'; radius = 60; break;
-    case 'resonance': color = '#ffd700'; radius = 70; break;
-    default: color = '#333'; radius = 40;
+function draw(){
+  time+=0.016;
+  const w=cv.width,h=cv.height,cx=w/2,cy=h/2;
+  ctx.fillStyle='rgba(5,5,8,0.15)';ctx.fillRect(0,0,w,h);
+  const tab=C.tabs[Matrix.currentTab];
+  let color,radius;
+  switch(tab.state){
+    case'idle':color='#333';radius=40;break;
+    case'collecting':color='#4dd0c7';radius=50+Math.sin(time*2)*10;break;
+    case'processing':color='#8b5cf6';radius=60;break;
+    case'resonance':color='#ffd700';radius=70;break;
+    default:color='#333';radius=40;
   }
-  
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius*2);
-  grad.addColorStop(0, color); grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad; ctx.globalAlpha = 0.5;
-  ctx.beginPath(); ctx.arc(cx, cy, radius*2, 0, Math.PI*2); ctx.fill();
-  ctx.globalAlpha = 1;
+  const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,radius*2);
+  grad.addColorStop(0,color);grad.addColorStop(1,'transparent');
+  ctx.fillStyle=grad;ctx.globalAlpha=0.5;
+  ctx.beginPath();ctx.arc(cx,cy,radius*2,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
   requestAnimationFrame(draw);
 }
 
-const hs = document.getElementById('h-slider');
-const dots = document.querySelectorAll('.dot');
-hs.addEventListener('scroll', () => { const i = Math.round(hs.scrollLeft / window.innerWidth); dots.forEach((d, j) => d.className = 'dot' + (j === i ? ' active' : '')); });
-dots.forEach(d => d.addEventListener('click', () => { const i = parseInt(d.dataset.idx); hs.children[i].scrollIntoView({ behavior: 'smooth' }); }));
+const hs=document.getElementById('h-slider');
+const mainDots=document.querySelectorAll('#nav .dot');
+hs.addEventListener('scroll',()=>{const i=Math.round(hs.scrollLeft/window.innerWidth);if(i!==Matrix.currentTab)Matrix.switchTab(i);});
+mainDots.forEach((d,idx)=>{d.addEventListener('click',()=>Matrix.switchTab(idx));});
 
-const i2 = document.getElementById('input-2');
-const i3 = document.getElementById('input-3');
-const ab = document.getElementById('answer-box');
-const am = document.getElementById('answer-meta');
-const lb = document.getElementById('log-box');
+const globalInput=document.getElementById('global-input-field');
+const lb=document.getElementById('log-box');
 
-function log(text, cls) {
-  cls = cls || '';
-  const d = document.createElement('div'); if (cls) d.className = cls;
-  d.textContent = '[' + new Date().toTimeString().slice(0,8) + '] ' + text;
-  lb.appendChild(d); while (lb.children.length > 50) lb.removeChild(lb.firstChild); lb.scrollTop = lb.scrollHeight;
+function log(text,cls){
+  cls=cls||'';
+  const d=document.createElement('div');if(cls)d.className=cls;
+  d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+text;
+  lb.appendChild(d);while(lb.children.length>50)lb.removeChild(lb.firstChild);lb.scrollTop=lb.scrollHeight;
 }
 
-async function sendImpulse() {
-  try {
-    const text = i2.value.trim();
-    log('ввод: "' + text + '"', 'cmd');
-    if (!text) { log('пусто', 'err'); return; }
-    
-    // Попытка перевести
-    const dsl = T.toDSL(text);
-    if (dsl) {
-      log('перевод: ' + text + ' → ' + dsl, 'cmd');
-      const res = await P.exec(dsl);
-      const human = T.toHuman(dsl);
-      log('результат: ' + human, 'gold');
-      ab.textContent = human;
-      am.textContent = 'dsl: ' + dsl.substring(0, 50);
-      
-      const tb = document.getElementById('translation-box');
-      tb.style.display = 'block';
-      document.getElementById('trans-human').textContent = text;
-      document.getElementById('trans-dsl').textContent = dsl;
-      
-      i2.value = '';
-      upd();
-      return;
+async function handleImpulse(text,tabIdx){
+  if(!text){log('пусто','err');return;}
+  log(`[вкладка ${tabIdx}] "${text}"`,'cmd');
+  C.switchTab(tabIdx);
+  const dsl=T.toDSL(text);
+  if(dsl){
+    log('перевод: '+text+' → '+dsl,'cmd');
+    const res=await P.exec(dsl);
+    const human=T.toHuman(dsl);
+    log('результат: '+human,'gold');
+    if(tabIdx===1){
+      const ab=document.getElementById('answer-box');const am=document.getElementById('answer-meta');
+      if(ab)ab.textContent=human;if(am)am.textContent='dsl: '+dsl.substring(0,50);
     }
-    
-    // Обычная обработка
-    const res = C.process(text);
-    if (!res) { log('null', 'err'); return; }
-    ab.textContent = res.form;
-    am.textContent = res.action + ' · ' + res.edges + ' связей';
-    log('ответ: ' + res.form, 'gold');
-    i2.value = '';
-    upd();
-  } catch(e) {
-    log('ОШИБКА: ' + e.message, 'err');
+    upd();updateAllDisplays();return;
   }
+  const res=C.process(text);
+  if(!res){log('null','err');return;}
+  log('ответ: '+res.form,'gold');
+  if(tabIdx===1){
+    const ab=document.getElementById('answer-box');const am=document.getElementById('answer-meta');
+    if(ab)ab.textContent=res.form;if(am)am.textContent=res.action+' · '+res.edges+' связей';
+  }
+  upd();updateAllDisplays();
 }
 
-function sendCmd() {
-  try {
-    const text = i3.value.trim();
-    log('> ' + text, 'cmd');
-    if (!text) return;
-    const cmd = text.toLowerCase();
-    if (cmd === 'help') log('команды: status, fold, clear', 'ok');
-    else if (cmd === 'status') { log('y=' + C.s.y.toFixed(3) + ' δ=' + C.dev().toFixed(3), 'ok'); log('связей: ' + G.data.size, 'ok'); }
-    else if (cmd === 'fold') { Lin.fold(); log('свёртка', 'gold'); setTimeout(()=>location.reload(), 1000); }
-    else if (cmd === 'clear') lb.innerHTML = '';
-    else log('неизвестная', 'err');
-    i3.value = '';
-  } catch(e) {
-    log('ОШИБКА: ' + e.message, 'err');
-  }
+async function handleCommand(text){
+  log('> '+text,'cmd');
+  if(!text)return;
+  const cmd=text.toLowerCase().trim();
+  if(cmd==='help')log('команды: status, fold, clear','ok');
+  else if(cmd==='status'){const tab=C.tabs[Matrix.currentTab];log('y='+tab.y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countForTab(Matrix.currentTab),'ok');}
+  else if(cmd==='fold'){Lin.fold();log('свёртка','gold');setTimeout(()=>location.reload(),1000);}
+  else if(cmd==='clear'){lb.innerHTML='';}
+  else log('неизвестная','err');
+  upd();updateAllDisplays();
 }
 
-i2.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendImpulse(); } });
-i3.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendCmd(); } });
+globalInput.addEventListener('keydown',async(e)=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const text=globalInput.value.trim();
+    if(!text)return;
+    const activeTab=Matrix.currentTab;
+    if(activeTab===2)await handleCommand(text);
+    else await handleImpulse(text,activeTab);
+    globalInput.value='';
+  }
+});
 
-function upd() {
-  document.getElementById('s-delta').textContent = C.dev().toFixed(3);
-  document.getElementById('s-y').textContent = C.s.y.toFixed(3);
-  document.getElementById('s-phase').textContent = C.PH[C.s.phase];
-  document.getElementById('s-level').textContent = C.s.spiral;
-  document.getElementById('s-gen').textContent = 'G' + Lin.cur.gen;
-  document.getElementById('s-edges').textContent = G.data.size;
-  document.getElementById('l-psi').textContent = C.tri.p.toFixed(2);
-  document.getElementById('l-omega').textContent = C.tri.o.toFixed(2);
-  document.getElementById('l-lambda').textContent = C.tri.l.toFixed(2);
-  document.getElementById('l-delta').textContent = C.dev().toFixed(3);
-  document.getElementById('l-y').textContent = C.s.y.toFixed(3);
-  document.getElementById('l-edges').textContent = G.data.size;
-  document.getElementById('l-phase').textContent = C.PH[C.s.phase];
-  document.getElementById('l-gen').textContent = 'G' + Lin.cur.gen;
-  document.getElementById('l-vectors').textContent = G.vecs.size;
-  document.getElementById('t-level').textContent = C.s.spiral;
-  document.getElementById('t-gen').textContent = Lin.cur.gen;
-  document.getElementById('t-edges').textContent = G.data.size;
-  document.getElementById('klepa-mood').textContent = K.s.mood;
-  document.getElementById('klepa-energy').textContent = K.s.energy.toFixed(2);
+function upd(){
+  const gen=Lin.cur?Lin.cur.gen:0;const genStr='G'+gen;
+  const s=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+  s('l-psi',C.tri.p.toFixed(2));s('l-omega',C.tri.o.toFixed(2));s('l-lambda',C.tri.l.toFixed(2));
+  s('l-delta',C.dev().toFixed(3));s('l-y',C.tabs[Matrix.currentTab].y.toFixed(3));
+  s('l-edges',G.countForTab(Matrix.currentTab));s('l-phase',C.PH[C.tabs[Matrix.currentTab].phase]);
+  s('l-gen',genStr);s('l-vectors',G.vecs.size);
+}
+
+function updateAllDisplays(){
+  const nodesDiv=document.getElementById('nodes-display');
+  if(nodesDiv){const nodes=new Set();G.data.forEach((v,k)=>{const parts=k.split('→');if(parts[0]&&parts[1]){nodes.add(parts[0]);nodes.add(parts[1]);}});nodesDiv.textContent=Array.from(nodes).join(', ')||'—';}
+  const edgesDiv=document.getElementById('edges-display');
+  if(edgesDiv){const edges=[];G.data.forEach((v,k)=>{const parts=k.split('→');if(parts[0]&&parts[1])edges.push(`${parts[0]}→${parts[1]} [${v.type}, w=${v.w.toFixed(2)}]`);});edgesDiv.textContent=edges.join('\n')||'—';}
+  const klepaDiv=document.getElementById('klepa-display');
+  if(klepaDiv)klepaDiv.innerHTML=`настроение: <b style="color:#a78bfa">${Klepa.state.mood}</b><br>энергия: <b style="color:#a78bfa">${Klepa.state.energy.toFixed(2)}</b>`;
+  const emergDiv=document.getElementById('emergence-display');
+  if(emergDiv)emergDiv.textContent='порог: 30 связей, вес > 0.85, цикл';
+  const linDiv=document.getElementById('lineage-display');
+  if(linDiv&&Lin.cur){const gen=Lin.cur?Lin.cur.gen:0;linDiv.innerHTML=`поколение: <b style="color:#ffd700">G${gen}</b><br>источник: <b style="color:#ffd700">${Lin.cur.src}</b><br>id: <b style="color:#4dd0c7">${Lin.cur.id}</b>`;}
 }
 
 // ═══════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════
-async function boot() {
-  const steps = [
-    { msg: 'словари...', progress: 20 },
-    { msg: 'наблюдатель...', progress: 40, act: () => Obs.init() },
-    { msg: 'граф...', progress: 60, act: () => { if (Obs.cur) G.load(); } },
-    { msg: 'готово', progress: 100 }
-  ];
-  for (const s of steps) {
-    document.getElementById('boot-msg').textContent = s.msg;
-    document.getElementById('boot-bar').style.width = s.progress + '%';
-    if (s.act) s.act();
-    await new Promise(r => setTimeout(r, 200));
-  }
-  await new Promise(r => setTimeout(r, 300));
-  document.getElementById('boot').style.opacity = '0';
-  setTimeout(() => {
-    document.getElementById('boot').style.display = 'none';
-    if (Obs.cur) { Lin.load(); K.load(); start(); }
-    else showLogin();
-  }, 800);
+async function boot(){
+  const steps=[{msg:'словари...',progress:20},{msg:'наблюдатель...',progress:40,act:()=>Obs.init()},{msg:'граф...',progress:60,act:()=>{if(Obs.cur)G.load();}},{msg:'готово',progress:100}];
+  for(const s of steps){document.getElementById('boot-msg').textContent=s.msg;document.getElementById('boot-bar').style.width=s.progress+'%';if(s.act)s.act();await new Promise(r=>setTimeout(r,200));}
+  await new Promise(r=>setTimeout(r,300));
+  document.getElementById('boot').style.opacity='0';
+  setTimeout(()=>{document.getElementById('boot').style.display='none';if(Obs.cur){Lin.load();Klepa.load();start();}else showLogin();},800);
 }
 
-function showLogin() {
-  const list = document.getElementById('login-obs-list'); list.innerHTML = '';
-  if (Obs.list.length === 0) list.innerHTML = '<div style="color:#555;font-size:10px;text-align:center;padding:16px">нет наблюдателей</div>';
-  else Obs.list.forEach(obs => {
-    const item = document.createElement('div'); item.className = 'obs-item';
-    item.textContent = obs.name + ' (' + obs.id.slice(-4) + ')';
-    item.onclick = () => { document.querySelectorAll('.obs-item').forEach(i => i.classList.remove('active')); item.classList.add('active'); document.getElementById('login-new').value = obs.name; };
-    list.appendChild(item);
-  });
-  document.getElementById('login').style.display = 'flex';
+function showLogin(){
+  const list=document.getElementById('login-obs-list');list.innerHTML='';
+  if(Obs.list.length===0)list.innerHTML='<div style="color:#555;font-size:10px;text-align:center;padding:16px">нет наблюдателей</div>';
+  else Obs.list.forEach(obs=>{const item=document.createElement('div');item.className='obs-item';item.textContent=obs.name+' ('+obs.id.slice(-4)+')';item.onclick=()=>{document.querySelectorAll('.obs-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');document.getElementById('login-new').value=obs.name;};list.appendChild(item);});
+  document.getElementById('login').style.display='flex';
 }
 
-function start() {
-  document.getElementById('login').style.display = 'none';
+function start(){
+  document.getElementById('login').style.display='none';
   draw();
-  log('MONOMOD v19.0 · ЗАПУСК', 'gold');
-  log('наблюдатель: ' + Obs.name(), 'cmd');
-  log('поколение G' + Lin.cur.gen, 'gold');
-  log('граф: ' + G.data.size + ' связей', '');
-  upd();
-  setInterval(() => { C.triStep(); C.cycleStep(); upd(); }, 1000);
+  log('MONOMOD v19.0 · ЗАПУСК','gold');
+  log('наблюдатель: '+Obs.name(),'cmd');
+  const gen=Lin.cur?Lin.cur.gen:0;
+  log('поколение G'+gen,'gold');
+  log('граф: '+G.data.size+' связей','');
+  upd();updateAllDisplays();
+  setInterval(()=>{C.triStep();C.tabs.forEach(tab=>{tab.phase=(tab.phase+1)%7;});upd();},1000);
 }
 
-document.getElementById('login-btn').onclick = () => { const n = document.getElementById('login-new').value.trim(); if (n) { Obs.create(n); start(); } };
-document.getElementById('login-new').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+document.getElementById('login-btn').onclick=()=>{const n=document.getElementById('login-new').value.trim();if(n){Obs.create(n);start();}};
+document.getElementById('login-new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});
 
-window.addEventListener('DOMContentLoaded', boot);
+window.addEventListener('DOMContentLoaded',boot);
 </script>
 </body>
 </html>
