@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#050508">
-<title>MONOMOD · v19.0</title>
+<title>MONOMOD v20.0</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#050508;color:#c8c8d4;font-family:'Courier New',monospace}
@@ -24,7 +24,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050508;color:#c8c8d
 .tab{flex:0 0 100vw;height:100%;scroll-snap-align:start;display:flex;flex-direction:column;border-right:1px solid #14141c;position:relative}
 .v-slider{display:flex;flex-direction:column;height:100%;overflow-y:auto;scroll-snap-type:y mandatory}
 .v-page{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;padding:16px}
-.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0a12;border:1px solid #ffd700;color:#ffd700;font-size:15px;text-align:center;border-radius:4px;min-height:120px}
+.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0a12;border:1px solid #ffd700;color:#ffd700;font-size:15px;text-align:center;border-radius:4px;min-height:120px;position:relative}
+.answer-source{position:absolute;top:8px;left:8px;font-size:8px;color:#8b5cf6;letter-spacing:1px}
 .answer-meta{font-size:9px;color:#555;margin-top:10px;text-align:center}
 .log-title{font-size:10px;letter-spacing:2px;color:#4dd0c7;margin-bottom:10px}
 .log-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:10px;font-size:9px}
@@ -71,7 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050508;color:#c8c8d
   </div>
   <div class="tab" id="tab-1">
     <div class="v-slider" id="vslider-1">
-      <div class="v-page"><div class="answer-box" id="answer-box">тишина...</div><div class="answer-meta" id="answer-meta"></div></div>
+      <div class="v-page"><div class="answer-box" id="answer-box"><div class="answer-source" id="answer-source"></div>тишина...</div><div class="answer-meta" id="answer-meta"></div></div>
       <div class="v-page"><div style="font-size:10px;color:#ffd700;letter-spacing:2px;margin-bottom:10px">ПЕРЕВОД</div><div id="translation-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
       <div class="v-page"><div style="font-size:10px;color:#ffd700;letter-spacing:2px;margin-bottom:10px">ЭМЕРДЖЕНТНОСТЬ</div><div id="emergence-display" style="font-size:11px;color:#c8c8d4;line-height:1.8"></div></div>
     </div>
@@ -173,13 +174,32 @@ const V26={
 // ═══════════════════════════════════════════════════════════════
 const Ctx={h:[],add(w){if(!w||w.length<3)return;this.h=this.h.filter(x=>x!==w);this.h.unshift(w);if(this.h.length>3)this.h.pop();},get(){return this.h;}};
 
-// ═══════════════════════════════════════════════════════════════
-// ГРАФ
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ГРАФ С АВТОСОХРАНЕНИЕМ
+// ══════════════════════════════════════════════════════════════
 const G={
   data:new Map(),vecs:new Map(),activeTab:0,
-  load(){const k='mm_g_'+Obs.cur;try{const r=localStorage.getItem(k);if(r)this.data=new Map(JSON.parse(r));}catch(e){}},
-  save(){const k='mm_g_'+Obs.cur;localStorage.setItem(k,JSON.stringify(Array.from(this.data.entries())));},
+  STORAGE_KEY:'monomod_v20',
+  load(){
+    try{
+      const r=localStorage.getItem(this.STORAGE_KEY);
+      if(r){
+        const d=JSON.parse(r);
+        if(d.graph)this.data=new Map(d.graph);
+        if(d.lineage&&Lin)Lin.cur=d.lineage;
+        if(d.klepa&&Klepa)Klepa.state=d.klepa;
+      }
+    }catch(e){}
+  },
+  save(){
+    try{
+      localStorage.setItem(this.STORAGE_KEY,JSON.stringify({
+        graph:Array.from(this.data.entries()),
+        lineage:Lin?.cur,
+        klepa:Klepa?.state
+      }));
+    }catch(e){}
+  },
   vec(w){if(!this.vecs.has(w))this.vecs.set(w,V26.encode(w));return this.vecs.get(w);},
   link(a,b,type,plane,tab){
     const tabId=tab!==undefined?tab:this.activeTab;
@@ -195,13 +215,49 @@ const G={
   topWForTab(tabId){let m=0;this.data.forEach(l=>{if(l.tab===tabId&&l.w>m)m=l.w;});return m;}
 };
 
+// Автосохранение каждые 5 секунд
+setInterval(()=>G.save(),5000);
+window.addEventListener('beforeunload',()=>G.save());
+
 // ═══════════════════════════════════════════════════════════════
-// КЛЕПА
-// ══════════════════════════════════════════════════════════════
+// КЛЕПА С СВЯЗНОЙ РЕЧЬЮ
+// ═════════════════════════════════════════════════════════════
 const Klepa={
   state:{mood:'neutral',energy:0.5},
+  responses:{
+    neutral:['наблюдаю','слушаю','здесь','вижу связи','график стабилен'],
+    curious:['интересно','расскажи больше','а что если','ищу узор','нахожу сходства'],
+    concerned:['осторожно','чувствую разрыв','нужна пауза','вижу напряжение','требует внимания'],
+    joyful:['резонанс','вижу узор','красиво','гармония','связи укрепляются'],
+    silent:['...','тишина','покой','пустота']
+  },
   save(){localStorage.setItem('mm_k_'+Obs.cur,JSON.stringify(this.state));},
-  load(){try{const s=JSON.parse(localStorage.getItem('mm_k_'+Obs.cur));if(s)this.state={...this.state,...s};}catch(e){}}
+  load(){try{const s=JSON.parse(localStorage.getItem('mm_k_'+Obs.cur));if(s)this.state={...this.state,...s};}catch(e){}},
+  
+  // Связная речь на основе контекста и графа
+  speak(input,context){
+    const mood=this.state.mood;
+    const phrases=this.responses[mood]||this.responses.neutral;
+    
+    // Выбираем фразу на основе контекста
+    let response=phrases[Math.floor(Math.random()*phrases.length)];
+    
+    // Если есть контекст (последние слова), добавляем отсылку
+    if(context&&context.length>0){
+      const lastWord=context[0];
+      if(Math.random()>0.5){
+        response+=' · '+lastWord;
+      }
+    }
+    
+    // Если граф большой, добавляем наблюдение о связях
+    if(G.data.size>10&&Math.random()>0.7){
+      const edges=G.countForTab(context?.tab||0);
+      response+=' · '+edges+' связей';
+    }
+    
+    return response;
+  }
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -333,14 +389,18 @@ const Matrix={tabs:3,pages:[4,3,4],currentTab:0,currentPage:[0,0,0],
 };
 
 // ═══════════════════════════════════════════════════════════════
-// UI
+// UI И ВИЗУАЛИЗАЦИЯ
 // ═══════════════════════════════════════════════════════════════
 const cv=document.getElementById('cv-0');
 const ctx=cv.getContext('2d');
-let anim='idle',time=0;
+let anim='idle',time=0,answeringNode=null;
 
-function resize(){cv.width=cv.parentElement.clientWidth;cv.height=cv.parentElement.clientHeight||window.innerHeight*0.7;}
-resize();window.addEventListener('resize',resize);
+function resize(){
+  const rect=cv.parentElement.getBoundingClientRect();
+  cv.width=rect.width;
+  cv.height=rect.height;
+}
+resize();window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(resize,150);});
 
 function draw(){
   time+=0.016;
@@ -360,6 +420,21 @@ function draw(){
   ctx.fillStyle=grad;ctx.globalAlpha=0.5;
   ctx.beginPath();ctx.arc(cx,cy,radius*2,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;
+  
+  // Подсветка отвечающего узла
+  if(answeringNode){
+    const vec=G.vec(answeringNode);
+    const proj=V26.proj(vec);
+    const scale=Math.min(w,h)*0.35;
+    const nx=cx+proj.x*scale,ny=cy+proj.y*scale;
+    ctx.fillStyle='rgba(255,215,0,0.8)';
+    ctx.beginPath();ctx.arc(nx,ny,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffd700';
+    ctx.font='10px monospace';
+    ctx.textAlign='center';
+    ctx.fillText(answeringNode,nx,ny-12);
+  }
+  
   requestAnimationFrame(draw);
 }
 
@@ -378,29 +453,50 @@ function log(text,cls){
   lb.appendChild(d);while(lb.children.length>50)lb.removeChild(lb.firstChild);lb.scrollTop=lb.scrollHeight;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ОБРАБОТКА ВВОДА С СВЯЗНОЙ РЕЧЬЮ КЛЕПЫ
+// ═══════════════════════════════════════════════════════════════
 async function handleImpulse(text,tabIdx){
   if(!text){log('пусто','err');return;}
   log(`[вкладка ${tabIdx}] "${text}"`,'cmd');
   C.switchTab(tabIdx);
+  
   const dsl=T.toDSL(text);
   if(dsl){
     log('перевод: '+text+' → '+dsl,'cmd');
     const res=await P.exec(dsl);
     const human=T.toHuman(dsl);
     log('результат: '+human,'gold');
-    if(tabIdx===1){
-      const ab=document.getElementById('answer-box');const am=document.getElementById('answer-meta');
-      if(ab)ab.textContent=human;if(am)am.textContent='dsl: '+dsl.substring(0,50);
-    }
+    
+    // Связный ответ Клепы
+    const klepaResponse=Klepa.speak(text,Ctx.get());
+    const ab=document.getElementById('answer-box');
+    const am=document.getElementById('answer-meta');
+    const as=document.getElementById('answer-source');
+    if(ab)ab.innerHTML=`<div class="answer-source" id="answer-source">отвечает: клепа</div>${human}<br><div style="font-size:11px;color:#8b5cf6;margin-top:10px">${klepaResponse}</div>`;
+    if(am)am.textContent='dsl: '+dsl.substring(0,50);
+    if(as)as.textContent='отвечает: клепа';
+    
     upd();updateAllDisplays();return;
   }
+  
   const res=C.process(text);
   if(!res){log('null','err');return;}
   log('ответ: '+res.form,'gold');
-  if(tabIdx===1){
-    const ab=document.getElementById('answer-box');const am=document.getElementById('answer-meta');
-    if(ab)ab.textContent=res.form;if(am)am.textContent=res.action+' · '+res.edges+' связей';
-  }
+  
+  // Связный ответ Клепы с указанием источника
+  const klepaResponse=Klepa.speak(text,Ctx.get());
+  const ab=document.getElementById('answer-box');
+  const am=document.getElementById('answer-meta');
+  const as=document.getElementById('answer-source');
+  if(ab)ab.innerHTML=`<div class="answer-source" id="answer-source">отвечает: ${res.form}</div>${res.form}<br><div style="font-size:11px;color:#8b5cf6;margin-top:10px">${klepaResponse}</div>`;
+  if(am)am.textContent=res.action+' · '+res.edges+' связей';
+  if(as)as.textContent='отвечает: '+res.form;
+  
+  // Показ образа отвечающего
+  answeringNode=res.form;
+  setTimeout(()=>{answeringNode=null;},3000);
+  
   upd();updateAllDisplays();
 }
 
@@ -408,11 +504,28 @@ async function handleCommand(text){
   log('> '+text,'cmd');
   if(!text)return;
   const cmd=text.toLowerCase().trim();
-  if(cmd==='help')log('команды: status, fold, clear','ok');
-  else if(cmd==='status'){const tab=C.tabs[Matrix.currentTab];log('y='+tab.y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countForTab(Matrix.currentTab),'ok');}
-  else if(cmd==='fold'){Lin.fold();log('свёртка','gold');setTimeout(()=>location.reload(),1000);}
-  else if(cmd==='clear'){lb.innerHTML='';}
-  else log('неизвестная','err');
+  if(cmd==='help'||cmd==='помощь')log('команды: status, fold, clear, payload generate','ok');
+  else if(cmd==='status'||cmd==='статус'){const tab=C.tabs[Matrix.currentTab];log('y='+tab.y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countForTab(Matrix.currentTab),'ok');}
+  else if(cmd==='fold'||cmd==='свертка'){Lin.fold();log('свёртка','gold');setTimeout(()=>location.reload(),1000);}
+  else if(cmd==='clear'||cmd==='очистить'){lb.innerHTML='';}
+  else if(cmd==='payload generate'||cmd==='экспорт'){
+    const data={v:'20.0',t:Date.now(),graph:Array.from(G.data.entries()),lineage:Lin.cur,klepa:Klepa.state};
+    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    log('payload сгенерирован ('+encoded.length+' символов)','gold');
+    if(navigator.clipboard)navigator.clipboard.writeText(encoded).then(()=>log('скопирован в буфер','ok'));
+  }
+  else if(cmd.startsWith('payload unfold')){
+    const encoded=cmd.substring('payload unfold'.length).trim();
+    try{
+      const data=JSON.parse(decodeURIComponent(escape(atob(encoded))));
+      if(data.graph){G.data=new Map(data.graph);G.save();}
+      if(data.lineage)Lin.cur=data.lineage;
+      if(data.klepa)Klepa.state=data.klepa;
+      log('payload развёрнут','gold');
+      upd();updateAllDisplays();
+    }catch(e){log('ошибка развёртки: '+e.message,'err');}
+  }
+  else log('неизвестная команда','err');
   upd();updateAllDisplays();
 }
 
@@ -454,7 +567,7 @@ function updateAllDisplays(){
 // BOOT
 // ═══════════════════════════════════════════════════════════════
 async function boot(){
-  const steps=[{msg:'словари...',progress:20},{msg:'наблюдатель...',progress:40,act:()=>Obs.init()},{msg:'граф...',progress:60,act:()=>{if(Obs.cur)G.load();}},{msg:'готово',progress:100}];
+  const steps=[{msg:'словари...',progress:20},{msg:'наблюдатель...',progress:40,act:()=>Obs.init()},{msg:'граф...',progress:60,act:()=>G.load()},{msg:'готово',progress:100}];
   for(const s of steps){document.getElementById('boot-msg').textContent=s.msg;document.getElementById('boot-bar').style.width=s.progress+'%';if(s.act)s.act();await new Promise(r=>setTimeout(r,200));}
   await new Promise(r=>setTimeout(r,300));
   document.getElementById('boot').style.opacity='0';
@@ -471,7 +584,7 @@ function showLogin(){
 function start(){
   document.getElementById('login').style.display='none';
   draw();
-  log('MONOMOD v19.0 · ЗАПУСК','gold');
+  log('MONOMOD v20.0 · ЗАПУСК','gold');
   log('наблюдатель: '+Obs.name(),'cmd');
   const gen=Lin.cur?Lin.cur.gen:0;
   log('поколение G'+gen,'gold');
