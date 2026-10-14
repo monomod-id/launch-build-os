@@ -40,19 +40,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </style>
 </head>
 <body>
-
 <div id="boot">
   <div class="logo">MONOMOD</div>
   <div class="bar"><div class="bar-fill" id="boot-bar"></div></div>
   <div class="msg" id="boot-msg">инициализация...</div>
 </div>
-
 <div id="login">
   <h2>НАБЛЮДАТЕЛЬ</h2>
   <input id="login-new" placeholder="имя..." autocomplete="off">
   <button id="login-btn">ВОЙТИ</button>
 </div>
-
 <div id="h-slider">
   <div class="tab" id="tab-0">
     <div class="v-slider">
@@ -66,7 +63,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div class="v-slider">
       <div class="v-page"><div class="answer-box" id="answer-box">тишина...</div></div>
       <div class="v-page"><div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">ПЕРЕВОД</div><div id="translation-display" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">ОБРАЗЫ</div><div id="avatars-list" style="font-size:11px;color:var(--text);line-height:1.8;margin-bottom:16px"></div><div id="chat-box" style="flex:1;overflow-y:auto;background:var(--panel);border:1px solid var(--border);padding:10px;border-radius:4px;min-height:200px"></div></div>
+      <div class="v-page"><div style="font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">ОБРАЗЫ</div><div id="chat-box" style="flex:1;overflow-y:auto;background:var(--panel);border:1px solid var(--border);padding:10px;border-radius:4px;min-height:200px"></div></div>
     </div>
   </div>
   <div class="tab" id="tab-2">
@@ -78,50 +75,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
   </div>
 </div>
-
 <div id="nav">
   <div class="dot active" data-idx="0"></div>
   <div class="dot" data-idx="1"></div>
   <div class="dot" data-idx="2"></div>
 </div>
-
 <div id="global-input">
   <input class="input-field" id="global-input-field" placeholder="ввод..." autocomplete="off">
 </div>
 
 <script>
 "use strict";
-
-// ══════════════════════════════════════════════════════════════
-// СЛОВАРИ
-// ══════════════════════════════════════════════════════════════
-const DICT_TYPES=`before=был до|предшествовал
-after=был после|следовал за
-inverse=наоборот|противоположен
-mirror=отражение|зеркалит
-linear=связан с|соединён с
-first=рождает|создаёт`;
-const DICT_PLANES=`прямая=в прямом направлении|линейно
-наоборот=в противоположном направлении|инверсно
-изнутри=из внутреннего пространства|глубинно
-между=в пространстве между|медиативно`;
-
+const DICT_TYPES=`before=был до|предшествовал\nafter=был после|следовал за\ninverse=наоборот|противоположен\nmirror=отражение|зеркалит\nlinear=связан с|соединён с\nfirst=рождает|создаёт`;
+const DICT_PLANES=`прямая=в прямом направлении|линейно\nнаоборот=в противоположном направлении|инверсно\nизнутри=из внутреннего пространства|глубинно\nмежду=в пространстве между|медиативно`;
 const Dict={parse(str,hasHuman){const d={};str.split('\n').forEach(line=>{const[k,v]=line.split('=');if(!v)return;if(hasHuman){const[ru,human]=v.split('|');d[k.trim()]={ru:ru.trim(),human:human?.trim()};}else d[k.trim()]=v.trim();});return d;},load(){return{types:this.parse(DICT_TYPES,true),planes:this.parse(DICT_PLANES,true)};}};
 const D=Dict.load();
 
-// ══════════════════════════════════════════════════════════════
-// 26D ВЕКТОРЫ
-// ══════════════════════════════════════════════════════════════
 const V26={axes:'абвгдежзийклмнопрстуфхцчшщэ'.split(''),encode(w){const v=new Array(26).fill(0);w=w.toLowerCase();for(let i=0;i<w.length;i++){const idx=this.axes.indexOf(w[i]);if(idx>=0)v[idx]++;}const sum=Math.sqrt(v.reduce((s,x)=>s+x*x,0))||1;return v.map(x=>x/sum);},proj(v){let x=0,y=0;for(let i=0;i<26;i++){x+=[0,4,9,14,19].includes(i)?v[i]:-v[i];y+=(i-12)*v[i];}return{x,y};}};
-
-// ══════════════════════════════════════════════════════════════
-// КОНТЕКСТ
-// ══════════════════════════════════════════════════════════════
 const Ctx={h:[],add(w){if(!w||w.length<3)return;this.h=this.h.filter(x=>x!==w);this.h.unshift(w);if(this.h.length>3)this.h.pop();},get(){return this.h;}};
 
-// ══════════════════════════════════════════════════════════════
-// ГРАФ С КРИСТАЛЛИЗАЦИЕЙ
-// ══════════════════════════════════════════════════════════════
 const G={data:new Map(),vecs:new Map(),activeTab:0,STORAGE_KEY:'monomod_v22',
   load(){try{const r=localStorage.getItem(this.STORAGE_KEY);if(r){const d=JSON.parse(r);if(d.graph)this.data=new Map(d.graph);if(d.lineage)window.Lin.cur=d.lineage;if(d.klepa)window.Klepa.state=d.klepa;}}catch(e){}},
   save(){try{const strong=Array.from(this.data.entries()).filter(([_,l])=>l.w>0.3);localStorage.setItem(this.STORAGE_KEY,JSON.stringify({graph:strong,lineage:window.Lin?.cur,klepa:window.Klepa?.state}));}catch(e){}},
@@ -129,17 +101,13 @@ const G={data:new Map(),vecs:new Map(),activeTab:0,STORAGE_KEY:'monomod_v22',
   link(a,b,type,plane,tab){const tabId=tab!==undefined?tab:this.activeTab;const k=[a,b,tabId].sort().join('→');const e=this.data.get(k)||{w:0.3,c:0,type:type||'linear',plane:plane||'прямая',t:Date.now(),tab:tabId};e.w=Math.min(1,e.w*1.05);e.c++;e.t=Date.now();this.data.set(k,e);this.save();},
   unlink(a,b,tab){const tabId=tab!==undefined?tab:this.activeTab;const k=[a,b,tabId].sort().join('→');this.data.delete(k);this.save();},
   countAll(){return this.data.size;},
-  countForTab(tabId){let c=0;this.data.forEach(v=>{if(v.tab===tabId)c++;});return c;},
   topW(){let m=0;this.data.forEach(l=>{if(l.w>m)m=l.w;});return m;},
   getNeighbors(word){const n=[];this.data.forEach((link,key)=>{const parts=key.split('→');if(parts[0]===word)n.push({word:parts[1],w:link.w,type:link.type});else if(parts[1]===word)n.push({word:parts[0],w:link.w,type:link.type});});return n;},
-  findNode(name){for(const[key]of this.data){if(key.includes(name))return key;}return null;}
+  cleanJunk(){let removed=0;G.data.forEach((link,key)=>{const parts=key.split('→');if(parts.some(p=>p.length>15&&!p.startsWith('G:')&&!p.startsWith('K:')&&!p.startsWith('S:')&&!p.startsWith('L:'))){G.data.delete(key);removed++;}});if(removed>0)G.save();return removed;}
 };
 setInterval(()=>G.save(),5000);
 window.addEventListener('beforeunload',()=>G.save());
 
-// ══════════════════════════════════════════════════════════════
-// КЛЕПА С АВТОМАТИЧЕСКИМ НАСТРОЕНИЕМ
-// ══════════════════════════════════════════════════════════════
 const Klepa={state:{mood:'neutral',energy:0.5},
   responses:{neutral:['наблюдаю','слушаю','здесь'],curious:['интересно','ищу узор'],concerned:['осторожно','вижу напряжение'],joyful:['резонанс','гармония'],silent:['...','тишина']},
   save(){localStorage.setItem('mm_k_'+window.Obs.cur,JSON.stringify(this.state));},
@@ -156,243 +124,136 @@ const Klepa={state:{mood:'neutral',energy:0.5},
     const phrases=this.responses[mood]||this.responses.neutral;
     let response=phrases[Math.floor(Math.random()*phrases.length)];
     if(Ctx.get().length>0&&Math.random()>0.5)response+=' · '+Ctx.get()[0];
-    const totalEdges=G.countAll();
-    if(totalEdges>5&&Math.random()>0.7)response+=' · '+totalEdges+' связей';
+    if(G.countAll()>5&&Math.random()>0.7)response+=' · '+G.countAll()+' связей';
     return response;
   }
 };
 
-// ══════════════════════════════════════════════════════════════
-// РОДОСЛОВНАЯ
-// ══════════════════════════════════════════════════════════════
+const Voice={enabled:true,
+  speak(text,mood='neutral'){
+    if(!this.enabled||!('speechSynthesis'in window))return;
+    speechSynthesis.cancel();
+    const utter=new SpeechSynthesisUtterance(text);
+    utter.lang='ru-RU';
+    utter.rate={neutral:1.0,curious:1.1,concerned:0.85,joyful:1.2,silent:0.7}[mood]||1.0;
+    utter.pitch={neutral:1.0,curious:1.3,concerned:0.7,joyful:1.4,silent:0.5}[mood]||1.0;
+    utter.volume={neutral:0.8,curious:0.9,concerned:0.6,joyful:1.0,silent:0.3}[mood]||0.8;
+    const voices=speechSynthesis.getVoices();
+    const ruVoice=voices.find(v=>v.lang.includes('ru'));
+    if(ruVoice)utter.voice=ruVoice;
+    speechSynthesis.speak(utter);
+  }
+};
+if('speechSynthesis'in window)speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+
 const Lin={cur:null,load(){const k='mm_lin_'+window.Obs.cur;try{this.cur=JSON.parse(localStorage.getItem(k));}catch(e){}if(!this.cur){this.cur={id:'R-'+window.C.hash(window.Obs.cur).slice(0,8),gen:0,src:'origin',t:Date.now()};this.save();}},save(){localStorage.setItem('mm_lin_'+window.Obs.cur,JSON.stringify(this.cur));},fold(){const p=this.cur;this.cur={id:'N-'+window.C.hash(p.id+Date.now()).slice(0,8),gen:p.gen+1,src:'fold',t:Date.now()};this.save();return this.cur;}};
 
-// ══════════════════════════════════════════════════════════════
-// КОНВЕЙЕР
-// ══════════════════════════════════════════════════════════════
 const C={tabs:[{y:110.347,phase:0,spiral:0,state:'idle',name:'СБОР'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОБРАБОТКА'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОТРАЖЕНИЕ'}],activeTab:0,tri:{p:0.33,l:0.33,o:0.33},hash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(16).toUpperCase().padStart(8,'0');},K(y){return(y>=68&&y<=194)?y:68+((y-68)%126);},triStep(){const t=1/3;this.tri.p+=(0-0.5*(this.tri.p-t))*0.01;this.tri.o+=(0-0.5*(this.tri.o-t))*0.01;this.tri.l+=(0-0.5*(this.tri.l-t))*0.01;const s=this.tri.p+this.tri.o+this.tri.l;this.tri.p/=s;this.tri.o/=s;this.tri.l/=s;},dev(){return Math.max(Math.abs(this.tri.p-1/3),Math.abs(this.tri.o-1/3),Math.abs(this.tri.l-1/3));},switchTab(idx){this.activeTab=idx;G.activeTab=idx;const hs=document.getElementById('h-slider');if(hs)hs.children[idx].scrollIntoView({behavior:'smooth'});const dots=document.querySelectorAll('#nav .dot');dots.forEach((d,i)=>{d.className='dot'+(i===idx?' active':'');});},cur(){return this.tabs[this.activeTab];},cycleStep(){const tab=this.cur();tab.phase=(tab.phase+1)%7;},PH:['collect','filter','route','process','reflect','crystal','release'],process(raw){const tab=this.cur();this.cycleStep();this.triStep();const words=raw.toLowerCase().replace(/[^\w\sа-яА-ЯёЁ]/g,'').split(/\s+/).filter(w=>w.length>2);if(words.length===0)return null;tab.state='collecting';words.forEach((a,i)=>words.slice(i+1).forEach(b=>G.link(a,b,'linear','прямая',this.activeTab)));tab.state='processing';const best=words[0];tab.y=this.K(tab.y+(Math.random()-0.5)*20);const topW=G.topW();if(topW>0.9)tab.state='resonance';else tab.state='collecting';Ctx.add(best);return{form:best,edges:G.countAll(),topW,tab:this.activeTab};}};
 
-// ══════════════════════════════════════════════════════════════
-// ИСПОЛНИТЕЛЬ DSL
-// ══════════════════════════════════════════════════════════════
-const P={async exec(code,vars={}){const cmds=code.split('|').map(c=>c.trim()).filter(Boolean);const res=[];for(const cmd of cmds){const ci=cmd.indexOf(':');if(ci<0)continue;const type=cmd.substring(0,ci);const args=cmd.substring(ci+1).split(':');try{const r=await this.run(type,args,vars);res.push(r);}catch(e){log('ошибка: '+e.message,'err');}}return res;},async run(type,args,vars){switch(type){case'G':{const edge=args[0];if(edge.includes('~')){const[a,b]=edge.split('~');G.unlink(a,b);return{act:'remove'};}const[a,b]=edge.split('→');G.link(a,b,args[1]||'linear',args[2]||'прямая');return{act:'create'};}case'K':{Klepa.state.mood=args[0];Klepa.state.energy=args[1]?parseFloat(args[1]):0.5;Klepa.save();return{act:'klepa'};}case'S':{C.cur().spiral=parseInt(args[0]);return{act:'spiral'};}case'L':{if(args[0]==='fold'){Lin.fold();return{act:'fold'};}return{act:'noop'};}default:return{act:'unknown'};}}};
+const P={async exec(code){const cmds=code.split('|').map(c=>c.trim()).filter(Boolean);for(const cmd of cmds){const ci=cmd.indexOf(':');if(ci<0)continue;const type=cmd.substring(0,ci);const args=cmd.substring(ci+1).split(':');try{if(type==='G'){const edge=args[0];if(edge.includes('~')){const[a,b]=edge.split('~');G.unlink(a,b);}else{const[a,b]=edge.split('→');G.link(a,b,args[1]||'linear',args[2]||'прямая');}}else if(type==='K'){Klepa.state.mood=args[0];Klepa.state.energy=args[1]?parseFloat(args[1]):0.5;Klepa.save();}else if(type==='S'){C.cur().spiral=parseInt(args[0]);}else if(type==='L'&&args[0]==='fold'){Lin.fold();}}catch(e){log('ошибка: '+e.message,'err');}}}},
+  toDSL(text){const patterns=[{re:/(\S+)\s+(?:был(?:о|а|и)?\s+)?до\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:before:прямая`},{re:/(\S+)\s+(?:является\s+)?наоборот\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:inverse:наоборот`},{re:/(\S+)\s+внутри\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:linear:изнутри`},{re:/(\S+)\s+рождает?\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:first:прямая`},{re:/сделать\s+клепа\s+(\S+)/,act:(m)=>`K:${m[1]}:0.9`}];for(const p of patterns){const m=text.match(p.re);if(m)return p.act(m);}return null;}};
 
-// ══════════════════════════════════════════════════════════════
-// ПЕРЕВОДЧИК
-// ══════════════════════════════════════════════════════════════
-const T={patterns:[{re:/(\S+)\s+(?:был(?:о|а|и)?\s+)?до\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:before:прямая`},{re:/(\S+)\s+(?:является\s+)?наоборот\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:inverse:наоборот`},{re:/(\S+)\s+внутри\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:linear:изнутри`},{re:/(\S+)\s+рождает?\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:first:прямая`},{re:/сделать\s+клепа\s+(\S+)/,act:(m)=>`K:${m[1]}:0.9`}],toDSL(text){for(const p of this.patterns){const m=text.match(p.re);if(m)return p.act(m);}return null;}};
-
-// ══════════════════════════════════════════════════════════════
-// НАБЛЮДАТЕЛЬ
-// ══════════════════════════════════════════════════════════════
 const Obs={cur:null,list:[],init(){const sid=localStorage.getItem('mm_obs_cur');const slist=localStorage.getItem('mm_obs_list');if(slist){try{this.list=JSON.parse(slist);}catch(e){}}if(sid&&this.list.some(u=>u.id===sid))this.cur=sid;},create(name){const id='OBS-'+C.hash(name);const ex=this.list.find(u=>u.id===id);if(ex){this.cur=id;return;}this.list.push({id,name,t:Date.now()});this.cur=id;localStorage.setItem('mm_obs_list',JSON.stringify(this.list));localStorage.setItem('mm_obs_cur',this.cur);},name(){const u=this.list.find(x=>x.id===this.cur);return u?u.name:'—';}};
 
-// ══════════════════════════════════════════════════════════════
-// ИНТЕРПРЕТАТОР ГРАФА
-// ══════════════════════════════════════════════════════════════
-const GraphInterpreter={
-  execute(cmdName){
-    let executed=false;
-    G.data.forEach((link,key)=>{
-      if(key.includes(cmdName)&&link.type==='first'){
-        const parts=key.split('→');
-        const dslAction=parts.find(p=>p.startsWith('K:')||p.startsWith('G:')||p.startsWith('S:')||p.startsWith('L:'));
-        if(dslAction){P.exec(dslAction);log(`[интерпретатор] ▶ ${dslAction}`,'gold');executed=true;}
-      }
-    });
-    if(!executed)log(`[интерпретатор] команда '${cmdName}' не найдена`,'err');
-  }
-};
+const GraphInterpreter={execute(cmdName){let executed=false;G.data.forEach((link,key)=>{if(key.includes(cmdName)&&link.type==='first'){const parts=key.split('→');const dslAction=parts.find(p=>p.startsWith('K:')||p.startsWith('G:')||p.startsWith('S:')||p.startsWith('L:'));if(dslAction){P.exec(dslAction);log(`[интерпретатор] ▶ ${dslAction}`,'gold');executed=true;}}});if(!executed)log(`[интерпретатор] команда '${cmdName}' не найдена`,'err');}};
 
-// ══════════════════════════════════════════════════════════════
-// ГЕНЕРАТОР СВЯЗНОЙ РЕЧИ
-// ══════════════════════════════════════════════════════════════
-const SmartTextGen={
-  generate(question,maxLength=5){
-    const words=question.toLowerCase().split(/\s+/);
-    const startNode=words.find(w=>w.length>2);
-    if(!startNode)return question;
-    const visited=new Set([startNode]);
-    const path=[startNode];
-    let current=startNode;
-    while(path.length<maxLength){
-      const neighbors=G.getNeighbors(current);
-      const unvisited=neighbors.filter(n=>!visited.has(n.word)&&n.w>0.35);
-      if(unvisited.length===0)break;
-      unvisited.sort((a,b)=>b.w-a.w);
-      const next=unvisited[0];
-      path.push(next.word);
-      visited.add(next.word);
-      current=next.word;
-    }
-    return path.join(' · ');
-  }
-};
+const SmartTextGen={generate(question,maxLength=5){const words=question.toLowerCase().split(/\s+/);const startNode=words.find(w=>w.length>2);if(!startNode)return question;const visited=new Set([startNode]);const path=[startNode];let current=startNode;while(path.length<maxLength){const neighbors=G.getNeighbors(current);const unvisited=neighbors.filter(n=>!visited.has(n.word)&&n.w>0.35);if(unvisited.length===0)break;unvisited.sort((a,b)=>b.w-a.w);const next=unvisited[0];path.push(next.word);visited.add(next.word);current=next.word;}return path.join(' · ');}};
 
-// ══════════════════════════════════════════════════════════════
-// UI
-// ══════════════════════════════════════════════════════════════
-const cv=document.getElementById('cv-0');
-const ctx=cv.getContext('2d');
-let time=0;
-
+const cv=document.getElementById('cv-0'), ctx=cv.getContext('2d'); let time=0;
 function resize(){if(!cv||!cv.parentElement)return;const rect=cv.parentElement.getBoundingClientRect();if(rect.width===0||rect.height===0)return;cv.width=rect.width;cv.height=rect.height;cv.style.width='100%';cv.style.height='100%';cv.style.display='block';}
-resize();
-window.addEventListener('load',()=>{setTimeout(resize,100);setTimeout(resize,500);});
-window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(resize,150);});
+resize(); window.addEventListener('load',()=>{setTimeout(resize,100);setTimeout(resize,500);}); window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(resize,150);});
 
-function draw(){if(cv.width===0||cv.height===0){resize();return;}time+=0.016;const w=cv.width,h=cv.height;const cx=w/2,cy=h/2;ctx.fillStyle='rgba(5,5,8,0.15)';ctx.fillRect(0,0,w,h);
+function draw(){if(cv.width===0||cv.height===0){resize();return;}time+=0.016;const w=cv.width,h=cv.height,cx=w/2,cy=h/2;ctx.fillStyle='rgba(5,5,8,0.15)';ctx.fillRect(0,0,w,h);
   const moodColors={neutral:'136,136,153',curious:'139,92,246',concerned:'255,71,87',joyful:'255,215,0',silent:'75,0,130'};
   const[r,g,b]=(moodColors[Klepa.state.mood]||moodColors.neutral).split(',');
-  const breath=Math.sin(time*0.5)*0.2+0.8;
-  const radius=(40+Klepa.state.energy*30)*breath;
+  const breath=Math.sin(time*0.5)*0.2+0.8, radius=(40+Klepa.state.energy*30)*breath;
   const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
-  grad.addColorStop(0,`rgba(${r},${g},${b},${0.3+Klepa.state.energy*0.4})`);
-  grad.addColorStop(1,'transparent');
+  grad.addColorStop(0,`rgba(${r},${g},${b},${0.3+Klepa.state.energy*0.4})`); grad.addColorStop(1,'transparent');
   ctx.fillStyle=grad;ctx.globalAlpha=0.6;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   const particleCount=Math.floor(Klepa.state.energy*20);
-  for(let i=0;i<particleCount;i++){const angle=(i/particleCount)*Math.PI*2+time*0.3;const dist=radius+20+Math.sin(time*2+i)*10;const x=cx+Math.cos(angle)*dist;const y=cy+Math.sin(angle)*dist;ctx.fillStyle=`rgba(${r},${g},${b},0.6)`;ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();}
+  for(let i=0;i<particleCount;i++){const angle=(i/particleCount)*Math.PI*2+time*0.3,dist=radius+20+Math.sin(time*2+i)*10;ctx.fillStyle=`rgba(${r},${g},${b},0.6)`;ctx.beginPath();ctx.arc(cx+Math.cos(angle)*dist,cy+Math.sin(angle)*dist,2,0,Math.PI*2);ctx.fill();}
   requestAnimationFrame(draw);}
 
 const hs=document.getElementById('h-slider');
 hs.addEventListener('scroll',()=>{const i=Math.round(hs.scrollLeft/window.innerWidth);if(i!==C.activeTab)C.switchTab(i);});
 document.querySelectorAll('#nav .dot').forEach((d,idx)=>{d.addEventListener('click',()=>C.switchTab(idx));});
-
-const globalInput=document.getElementById('global-input-field');
-const lb=document.getElementById('log-box');
-
+const globalInput=document.getElementById('global-input-field'), lb=document.getElementById('log-box');
 function log(text,cls){cls=cls||'';const d=document.createElement('div');if(cls)d.className=cls;d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+text;lb.appendChild(d);while(lb.children.length>50)lb.removeChild(lb.firstChild);lb.scrollTop=lb.scrollHeight;}
 
-// ══════════════════════════════════════════════════════════════
-// ОБРАБОТКА ВВОДА
-// ══════════════════════════════════════════════════════════════
 async function handleImpulse(text,tabIdx){
   if(!text){log('пусто','err');return;}
-  
-  // Интерпретатор команд (работает на любой вкладке)
   const lowerText=text.toLowerCase().trim();
-  if(lowerText.startsWith('выполни ')||lowerText.startsWith('run ')){
-    const cmd=text.split(/\s+/)[1].trim();
-    GraphInterpreter.execute(cmd);
-    upd();return;
-  }
-  
-  // Команды (работают на любой вкладке)
-  if(lowerText==='status'||lowerText==='статус'){log('y='+C.cur().y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countAll(),'ok');log('спираль: L'+C.cur().spiral,'ok');log('фаза: '+C.PH[C.cur().phase],'ok');upd();return;}
+  if(lowerText.startsWith('выполни ')||lowerText.startsWith('run ')){GraphInterpreter.execute(text.split(/\s+/)[1].trim());upd();return;}
+  if(lowerText==='status'||lowerText==='статус'){log('y='+C.cur().y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countAll(),'ok');log('спираль: L'+C.cur().spiral,'ok');upd();return;}
   if(lowerText==='fold'||lowerText==='свёртка'){Lin.fold();log('свёртка · G'+Lin.cur.gen,'gold');setTimeout(()=>location.reload(),1000);return;}
   if(lowerText==='clear'||lowerText==='очистить'){lb.innerHTML='';return;}
-  
-  // Payload generate (с правильным UTF-8)
+  if(lowerText==='очистить мусор'||lowerText==='clear junk'){log('удалено мусорных связей: '+G.cleanJunk(),'gold');upd();return;}
   if(lowerText==='payload generate'||lowerText==='экспорт'){
     const data={v:'22.0',t:Date.now(),graph:Array.from(G.data.entries())};
-    const json=JSON.stringify(data);
-    const bytes=new TextEncoder().encode(json);
-    let binaryString='';
-    for(let i=0;i<bytes.length;i++)binaryString+=String.fromCharCode(bytes[i]);
-    const encoded=btoa(binaryString);
-    log('payload: '+encoded.length+' символов','gold');
-    const parts=[];
-    for(let i=0;i<encoded.length;i+=1000)parts.push(encoded.substring(i,i+1000));
+    const json=JSON.stringify(data), bytes=new TextEncoder().encode(json);
+    let binaryString=''; for(let i=0;i<bytes.length;i++)binaryString+=String.fromCharCode(bytes[i]);
+    const encoded=btoa(binaryString); log('payload: '+encoded.length+' символов','gold');
+    const parts=[]; for(let i=0;i<encoded.length;i+=1000)parts.push(encoded.substring(i,i+1000));
     log('частей: '+parts.length,'gold');
-    if(parts.length===1&&navigator.clipboard){
-      navigator.clipboard.writeText(encoded).then(()=>log('скопирован в буфер','ok'));
-    }else{
-      parts.forEach((part,idx)=>{log('часть '+(idx+1)+': '+part,'cmd');});
-      log('скопируй все части подряд','ok');
-    }
+    if(parts.length===1&&navigator.clipboard)navigator.clipboard.writeText(encoded).then(()=>log('скопирован','ok'));
+    else parts.forEach((part,idx)=>log('часть '+(idx+1)+': '+part,'cmd'));
     return;
   }
-  
-  // Payload unfold (с правильным UTF-8)
   if(lowerText.startsWith('payload unfold ')){
-    const encoded=text.substring('payload unfold '.length).trim();
     try{
-      const binaryString=atob(encoded);
-      const bytes=new Uint8Array(binaryString.length);
+      const encoded=text.substring('payload unfold '.length).trim();
+      const binaryString=atob(encoded), bytes=new Uint8Array(binaryString.length);
       for(let i=0;i<binaryString.length;i++)bytes[i]=binaryString.charCodeAt(i);
-      const json=new TextDecoder('utf-8').decode(bytes);
-      const data=JSON.parse(json);
+      const data=JSON.parse(new TextDecoder('utf-8').decode(bytes));
       if(data.graph){G.data=new Map(data.graph);G.save();}
-      if(data.lineage)Lin.cur=data.lineage;
-      if(data.klepa)Klepa.state=data.klepa;
-      log('развёрнуто: '+(data.graph?data.graph.length:0)+' связей','gold');
-      upd();
+      if(data.lineage)Lin.cur=data.lineage; if(data.klepa)Klepa.state=data.klepa;
+      log('развёрнуто: '+(data.graph?data.graph.length:0)+' связей','gold'); upd();
     }catch(e){log('ошибка: '+e.message,'err');}
     return;
   }
-  
-  // DSL
-  const dsl=T.toDSL(text);
+  const dsl=P.toDSL(text);
   if(dsl){log('DSL: '+dsl,'cmd');await P.exec(dsl);log('исполнено','gold');upd();return;}
   
-  // Обычный ввод
-  log(`[${tabIdx}] "${text}"`,'cmd');
-  C.switchTab(tabIdx);
-  const res=C.process(text);
-  if(!res){log('null','err');return;}
-  
-  // Генерация связного ответа
+  log(`[${tabIdx}] "${text}"`,'cmd'); C.switchTab(tabIdx);
+  const res=C.process(text); if(!res){log('null','err');return;}
   const answer=SmartTextGen.generate(text,5);
   const ab=document.getElementById('answer-box');
   if(ab)ab.innerHTML=`<div style="font-size:14px;color:var(--gold);line-height:1.6">${answer}</div>`;
   log('ответ: '+answer,'gold');
+  Voice.speak(answer, Klepa.state.mood);
   upd();
 }
 
 globalInput.addEventListener('keydown',async(e)=>{if(e.key==='Enter'){e.preventDefault();const text=globalInput.value.trim();if(!text)return;await handleImpulse(text,C.activeTab);globalInput.value='';}});
 
-// ══════════════════════════════════════════════════════════════
-// ОБНОВЛЕНИЕ UI
-// ══════════════════════════════════════════════════════════════
 function upd(){
   const gen=Lin.cur?Lin.cur.gen:0;
   const s=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
-  s('l-psi',C.tri.p.toFixed(2));
-  s('l-omega',C.tri.o.toFixed(2));
-  s('l-lambda',C.tri.l.toFixed(2));
-  s('l-delta',C.dev().toFixed(3));
-  s('l-y',C.cur().y.toFixed(3));
-  s('l-edges',G.countAll());
-  s('l-phase',C.PH[C.cur().phase]);
-  s('l-gen','G'+gen);
-  s('l-vectors',G.vecs.size);
-  
-  // Автоматическое настроение Клепы
+  s('l-psi',C.tri.p.toFixed(2)); s('l-omega',C.tri.o.toFixed(2)); s('l-lambda',C.tri.l.toFixed(2));
+  s('l-delta',C.dev().toFixed(3)); s('l-y',C.cur().y.toFixed(3)); s('l-edges',G.countAll());
+  s('l-phase',C.PH[C.cur().phase]); s('l-gen','G'+gen); s('l-vectors',G.vecs.size);
   Klepa.autoMood(C.tri,C.dev());
-  
   const klepaDiv=document.getElementById('klepa-display');
   if(klepaDiv)klepaDiv.innerHTML=`настроение: <b style="color:var(--purple)">${Klepa.state.mood}</b><br>энергия: <b style="color:var(--purple)">${Klepa.state.energy.toFixed(2)}</b>`;
-  
   const nodesDiv=document.getElementById('nodes-display');
   if(nodesDiv){const nodes=new Set();G.data.forEach((v,k)=>{if(v.w>0.5){const parts=k.split('→');if(parts[0])nodes.add(parts[0]);if(parts[1])nodes.add(parts[1]);}});nodesDiv.textContent=Array.from(nodes).join(', ')||'—';}
-  
   const edgesDiv=document.getElementById('edges-display');
   if(edgesDiv){const edges=[];G.data.forEach((v,k)=>{if(v.w>0.5){const parts=k.split('→');if(parts[0]&&parts[1])edges.push(`${parts[0]}→${parts[1]} [${v.type}, w=${v.w.toFixed(2)}]`);}});edgesDiv.textContent=edges.join('\n')||'—';}
-  
   const linDiv=document.getElementById('lineage-display');
-  if(linDiv&&Lin.cur){linDiv.innerHTML=`поколение: <b style="color:var(--gold)">G${Lin.cur.gen}</b><br>источник: <b style="color:var(--gold)">${Lin.cur.src}</b>`;}
-  
+  if(linDiv&&Lin.cur)linDiv.innerHTML=`поколение: <b style="color:var(--gold)">G${Lin.cur.gen}</b><br>источник: <b style="color:var(--gold)">${Lin.cur.src}</b>`;
   const evoDiv=document.getElementById('evo-status');
   if(evoDiv){const edges=G.countAll();evoDiv.innerHTML=`<div style="margin-bottom:8px"><b style="color:var(--gold)">Поколение:</b> G${gen}</div><div style="margin-bottom:8px"><b style="color:var(--accent)">Связей:</b> ${edges}</div><div style="margin-bottom:8px"><b style="color:var(--purple)">Спираль:</b> L${C.cur().spiral}</div><div style="margin-bottom:8px"><b style="color:var(--accent)">Здоровье:</b> ${edges===0?'пусто':C.dev()>0.3?'дисбаланс':'здорово'}</div>`;}
 }
 
-// ══════════════════════════════════════════════════════════════
-// BOOT
-// ═════════════════════════════════════════════════════════════
 async function boot(){
   const steps=[{msg:'словари...',progress:20},{msg:'наблюдатель...',progress:40,act:()=>Obs.init()},{msg:'граф...',progress:60,act:()=>G.load()},{msg:'готово',progress:100}];
   for(const s of steps){document.getElementById('boot-msg').textContent=s.msg;document.getElementById('boot-bar').style.width=s.progress+'%';if(s.act)s.act();await new Promise(r=>setTimeout(r,200));}
-  await new Promise(r=>setTimeout(r,300));
-  document.getElementById('boot').style.opacity='0';
-  setTimeout(()=>{document.getElementById('boot').style.display='none';if(Obs.cur){Lin.load();Klepa.load();start();}else showLogin();},800);
+  await new Promise(r=>setTimeout(r,300)); document.getElementById('boot').style.opacity='0';
+  setTimeout(()=>{document.getElementById('boot').style.display='none';if(Obs.cur){Lin.load();Klepa.load();start();}else{document.getElementById('login').style.display='flex';}},800);
 }
-
-function showLogin(){document.getElementById('login').style.display='flex';}
 function start(){document.getElementById('login').style.display='none';draw();log('MONOMOD v22.0 · ЗАПУСК','gold');log('наблюдатель: '+Obs.name(),'cmd');log('граф: '+G.countAll()+' связей','');upd();setInterval(()=>{C.triStep();C.tabs.forEach(tab=>{tab.phase=(tab.phase+1)%7;});upd();},1000);}
-
 document.getElementById('login-btn').onclick=()=>{const n=document.getElementById('login-new').value.trim();if(n){Obs.create(n);start();}};
 document.getElementById('login-new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});
-
 window.addEventListener('DOMContentLoaded',boot);
 </script>
 </body>
