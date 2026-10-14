@@ -209,7 +209,8 @@ const GraphInterpreter={
 // ══════════════════════════════════════════════════════════════
 const SmartTextGen={
   generate(question,maxLength=5){
-    const startNode=question.toLowerCase().replace(/[^\wа-яё]/g,'').split(/\s+/).find(w=>w.length>2);
+    const words=question.toLowerCase().split(/\s+/);
+    const startNode=words.find(w=>w.length>2);
     if(!startNode)return question;
     const visited=new Set([startNode]);
     const path=[startNode];
