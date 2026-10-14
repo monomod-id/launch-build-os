@@ -2,259 +2,413 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#050508">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MONOMOD v22.0</title>
 <style>
-:root{--bg:#050508;--panel:#0a0a12;--border:#1c1c26;--text:#c8c8d4;--accent:#4dd0c7;--gold:#ffd700;--purple:#8b5cf6;--red:#ff4757}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;transition:background 1s}
-#boot,#login{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000}
-#boot .logo{font-size:20px;letter-spacing:6px;color:var(--accent);margin-bottom:16px}
-#boot .bar{width:160px;height:2px;background:var(--border);overflow:hidden}
-#boot .bar-fill{height:100%;background:var(--accent);width:0%;transition:width 0.3s}
-#boot .msg{margin-top:10px;font-size:9px;color:#555;letter-spacing:2px}
-#login{display:none;padding:20px}
-#login h2{color:var(--accent);letter-spacing:3px;margin-bottom:16px;font-size:12px}
-#login input{margin-top:12px;padding:10px;background:var(--panel);border:1px solid var(--border);color:var(--text);font:inherit;width:100%;max-width:280px;font-size:11px;outline:none}
-#login button{margin-top:10px;padding:10px 24px;background:transparent;border:1px solid var(--accent);color:var(--accent);font:inherit;cursor:pointer;font-size:11px}
-#h-slider{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory}
-#h-slider::-webkit-scrollbar{display:none}
-.tab{flex:0 0 100vw;height:100%;scroll-snap-align:start;display:flex;flex-direction:column;border-right:1px solid var(--border);position:relative}
-.v-slider{display:flex;flex-direction:column;height:100%;overflow-y:auto;scroll-snap-type:y mandatory}
-.v-page{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;padding:16px}
-.answer-box{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--panel);border:1px solid var(--gold);color:var(--gold);font-size:14px;text-align:center;border-radius:4px;min-height:120px;line-height:1.6}
-.log-title{font-size:10px;letter-spacing:2px;color:var(--accent);margin-bottom:10px}
-.log-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:10px;font-size:9px}
-.log-metrics .m{padding:5px;background:var(--panel);border:1px solid var(--border);border-radius:2px}
-.log-metrics .k{color:#555;display:block;font-size:7px}
-.log-metrics .v{color:var(--gold);font-size:11px}
-.log-box{flex:1;overflow-y:auto;font-size:9px;line-height:1.5;color:#555}
-.log-box div{padding:2px 0;border-bottom:1px dotted var(--border);word-break:break-word;white-space:pre-wrap}
-.log-box .gold{color:var(--gold)}.log-box .cmd{color:var(--accent)}.log-box .err{color:var(--red)}.log-box .purple{color:var(--purple)}.log-box .ok{color:#4ade80}
-.input-field{width:100%;padding:12px;background:var(--panel);border:1px solid var(--border);color:var(--text);font:inherit;font-size:13px;outline:none;border-radius:3px}
-#nav{position:fixed;bottom:calc(40px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;background:rgba(5,5,8,0.8);padding:5px 8px;border-radius:16px;border:1px solid var(--border)}
-.dot{width:5px;height:5px;border-radius:50%;background:#333;cursor:pointer;transition:0.2s}
-.dot.active{background:var(--accent);width:16px;border-radius:3px}
-#global-input{position:fixed;bottom:0;left:0;right:0;z-index:20;background:rgba(5,5,8,0.95);padding:10px;border-top:1px solid var(--border)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050508;color:#c8c8d4;font-family:monospace;overflow:hidden;height:100vh}
+#app{display:flex;height:100vh}
+#sidebar{width:200px;background:#0a0a12;border-right:1px solid #1c1c26;padding:10px;overflow-y:auto}
+#main{flex:1;display:flex;flex-direction:column}
+#canvas-container{flex:1;position:relative}
+canvas{width:100%;height:100%}
+#input-area{height:60px;background:#0a0a12;border-top:1px solid #1c1c26;display:flex;padding:10px}
+#input{flex:1;background:#050508;color:#c8c8d4;border:1px solid #1c1c26;padding:10px;font-family:monospace;font-size:14px;outline:none}
+#input:focus{border-color:#4dd0c7}
+.metric{margin-bottom:8px;font-size:11px}
+.metric-label{color:#555;font-size:9px}
+.metric-value{color:#ffd700;font-size:13px}
+#log{height:150px;background:#0a0a12;border-top:1px solid #1c1c26;padding:10px;overflow-y:auto;font-size:10px}
+.log-entry{margin-bottom:4px;padding:2px 0;border-bottom:1px dotted #1c1c26}
+.log-entry.gold{color:#ffd700}
+.log-entry.cmd{color:#4dd0c7}
+.log-entry.err{color:#ff4757}
 </style>
 </head>
 <body>
-<div id="boot">
-  <div class="logo">MONOMOD</div>
-  <div class="bar"><div class="bar-fill" id="boot-bar"></div></div>
-  <div class="msg" id="boot-msg">инициализация...</div>
-</div>
-<div id="login">
-  <h2>НАБЛЮДАТЕЛЬ</h2>
-  <input id="login-new" placeholder="имя..." autocomplete="off">
-  <button id="login-btn">ВОЙТИ</button>
-</div>
-<div id="h-slider">
-  <div class="tab" id="tab-0">
-    <div class="v-slider">
-      <div class="v-page"><canvas id="cv-0" style="width:100%;height:70vh"></canvas><div style="text-align:center;font-size:10px;color:var(--accent);letter-spacing:3px;margin-top:10px">СБОР</div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:10px">УЗЛЫ (вес &gt; 0.5)</div><div id="nodes-display" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:10px">СВЯЗИ (вес &gt; 0.5)</div><div id="edges-display" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">КЛЕПА</div><div id="klepa-display" style="font-size:12px;color:var(--text);line-height:1.8"></div></div>
-    </div>
+<div id="app">
+  <div id="sidebar">
+    <div class="metric"><div class="metric-label"></div><div class="metric-value" id="m-psi">0.33</div></div>
+    <div class="metric"><div class="metric-label">Ω</div><div class="metric-value" id="m-omega">0.33</div></div>
+    <div class="metric"><div class="metric-label">Λ</div><div class="metric-value" id="m-lambda">0.33</div></div>
+    <div class="metric"><div class="metric-label">δ</div><div class="metric-value" id="m-delta">0.000</div></div>
+    <div class="metric"><div class="metric-label">связей</div><div class="metric-value" id="m-edges">0</div></div>
+    <div class="metric"><div class="metric-label">поколение</div><div class="metric-value" id="m-gen">G0</div></div>
+    <div class="metric"><div class="metric-label">настроение</div><div class="metric-value" id="m-mood">neutral</div></div>
   </div>
-  <div class="tab" id="tab-1">
-    <div class="v-slider">
-      <div class="v-page"><div class="answer-box" id="answer-box">тишина...</div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">ПЕРЕВОД</div><div id="translation-display" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">ОБРАЗЫ</div><div id="chat-box" style="flex:1;overflow-y:auto;background:var(--panel);border:1px solid var(--border);padding:10px;border-radius:4px;min-height:200px"></div></div>
-    </div>
+  <div id="main">
+    <div id="canvas-container"><canvas id="cv"></canvas></div>
+    <div id="log"></div>
+    <div id="input-area"><input id="input" placeholder="ввод..." autocomplete="off"></div>
   </div>
-  <div class="tab" id="tab-2">
-    <div class="v-slider">
-      <div class="v-page"><div class="log-title">КОНВЕЙЕР</div><div class="log-metrics"><div class="m"><span class="k">Ψ</span><span class="v" id="l-psi">.33</span></div><div class="m"><span class="k">Ω</span><span class="v" id="l-omega">.33</span></div><div class="m"><span class="k">Λ</span><span class="v" id="l-lambda">.33</span></div><div class="m"><span class="k">δ</span><span class="v" id="l-delta">0.000</span></div><div class="m"><span class="k">y</span><span class="v" id="l-y">110.347</span></div><div class="m"><span class="k">связей</span><span class="v" id="l-edges">0</span></div><div class="m"><span class="k">фаза</span><span class="v" id="l-phase">collect</span></div><div class="m"><span class="k">поколение</span><span class="v" id="l-gen">G0</span></div><div class="m"><span class="k">26D</span><span class="v" id="l-vectors">0</span></div></div></div>
-      <div class="v-page"><div class="log-title">ЖУРНАЛ</div><div class="log-box" id="log-box"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">РОДОСЛОВНАЯ</div><div id="lineage-display" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-      <div class="v-page"><div style="font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:10px">СТАТУС</div><div id="evo-status" style="font-size:11px;color:var(--text);line-height:1.8"></div></div>
-    </div>
-  </div>
-</div>
-<div id="nav">
-  <div class="dot active" data-idx="0"></div>
-  <div class="dot" data-idx="1"></div>
-  <div class="dot" data-idx="2"></div>
-</div>
-<div id="global-input">
-  <input class="input-field" id="global-input-field" placeholder="ввод..." autocomplete="off">
 </div>
 
 <script>
 "use strict";
-const DICT_TYPES=`before=был до|предшествовал\nafter=был после|следовал за\ninverse=наоборот|противоположен\nmirror=отражение|зеркалит\nlinear=связан с|соединён с\nfirst=рождает|создаёт`;
-const DICT_PLANES=`прямая=в прямом направлении|линейно\nнаоборот=в противоположном направлении|инверсно\nизнутри=из внутреннего пространства|глубинно\nмежду=в пространстве между|медиативно`;
-const Dict={parse(str,hasHuman){const d={};str.split('\n').forEach(line=>{const[k,v]=line.split('=');if(!v)return;if(hasHuman){const[ru,human]=v.split('|');d[k.trim()]={ru:ru.trim(),human:human?.trim()};}else d[k.trim()]=v.trim();});return d;},load(){return{types:this.parse(DICT_TYPES,true),planes:this.parse(DICT_PLANES,true)};}};
-const D=Dict.load();
 
-const V26={axes:'абвгдежзийклмнопрстуфхцчшщэ'.split(''),encode(w){const v=new Array(26).fill(0);w=w.toLowerCase();for(let i=0;i<w.length;i++){const idx=this.axes.indexOf(w[i]);if(idx>=0)v[idx]++;}const sum=Math.sqrt(v.reduce((s,x)=>s+x*x,0))||1;return v.map(x=>x/sum);},proj(v){let x=0,y=0;for(let i=0;i<26;i++){x+=[0,4,9,14,19].includes(i)?v[i]:-v[i];y+=(i-12)*v[i];}return{x,y};}};
-const Ctx={h:[],add(w){if(!w||w.length<3)return;this.h=this.h.filter(x=>x!==w);this.h.unshift(w);if(this.h.length>3)this.h.pop();},get(){return this.h;}};
+// ══════════════════════════════════════════════════════════════
+// ЕДИНЫЙ ЯЗЫК: ГРАФ = КОД = ДАННЫЕ
+// ══════════════════════════════════════════════════════════════
 
-const G={data:new Map(),vecs:new Map(),activeTab:0,STORAGE_KEY:'monomod_v22',
-  load(){try{const r=localStorage.getItem(this.STORAGE_KEY);if(r){const d=JSON.parse(r);if(d.graph)this.data=new Map(d.graph);if(d.lineage)window.Lin.cur=d.lineage;if(d.klepa)window.Klepa.state=d.klepa;}}catch(e){}},
-  save(){try{const strong=Array.from(this.data.entries()).filter(([_,l])=>l.w>0.3);localStorage.setItem(this.STORAGE_KEY,JSON.stringify({graph:strong,lineage:window.Lin?.cur,klepa:window.Klepa?.state}));}catch(e){}},
-  vec(w){if(!this.vecs.has(w))this.vecs.set(w,V26.encode(w));return this.vecs.get(w);},
-  link(a,b,type,plane,tab){const tabId=tab!==undefined?tab:this.activeTab;const k=[a,b,tabId].sort().join('→');const e=this.data.get(k)||{w:0.3,c:0,type:type||'linear',plane:plane||'прямая',t:Date.now(),tab:tabId};e.w=Math.min(1,e.w*1.05);e.c++;e.t=Date.now();this.data.set(k,e);this.save();},
-  unlink(a,b,tab){const tabId=tab!==undefined?tab:this.activeTab;const k=[a,b,tabId].sort().join('→');this.data.delete(k);this.save();},
-  countAll(){return this.data.size;},
-  topW(){let m=0;this.data.forEach(l=>{if(l.w>m)m=l.w;});return m;},
-  getNeighbors(word){const n=[];this.data.forEach((link,key)=>{const parts=key.split('→');if(parts[0]===word)n.push({word:parts[1],w:link.w,type:link.type});else if(parts[1]===word)n.push({word:parts[0],w:link.w,type:link.type});});return n;},
-  cleanJunk(){let removed=0;G.data.forEach((link,key)=>{const parts=key.split('→');if(parts.some(p=>p.length>15&&!p.startsWith('G:')&&!p.startsWith('K:')&&!p.startsWith('S:')&&!p.startsWith('L:'))){G.data.delete(key);removed++;}});if(removed>0)G.save();return removed;}
-};
-setInterval(()=>G.save(),5000);
-window.addEventListener('beforeunload',()=>G.save());
-
-const Klepa={state:{mood:'neutral',energy:0.5},
-  responses:{neutral:['наблюдаю','слушаю','здесь'],curious:['интересно','ищу узор'],concerned:['осторожно','вижу напряжение'],joyful:['резонанс','гармония'],silent:['...','тишина']},
-  save(){localStorage.setItem('mm_k_'+window.Obs.cur,JSON.stringify(this.state));},
-  load(){try{const s=JSON.parse(localStorage.getItem('mm_k_'+window.Obs.cur));if(s)this.state={...this.state,...s};}catch(e){}},
-  autoMood(tri,dev){
-    if(dev>0.3){this.state.mood='concerned';this.state.energy=0.3;}
-    else if(tri.p>0.5){this.state.mood='curious';this.state.energy=0.7;}
-    else if(tri.o>0.5){this.state.mood='joyful';this.state.energy=0.9;}
-    else if(tri.l>0.5){this.state.mood='silent';this.state.energy=0.4;}
-    else{this.state.mood='neutral';this.state.energy=0.5;}
-  },
-  speak(input){
-    const mood=this.state.mood;
-    const phrases=this.responses[mood]||this.responses.neutral;
-    let response=phrases[Math.floor(Math.random()*phrases.length)];
-    if(Ctx.get().length>0&&Math.random()>0.5)response+=' · '+Ctx.get()[0];
-    if(G.countAll()>5&&Math.random()>0.7)response+=' · '+G.countAll()+' связей';
-    return response;
-  }
-};
-
-const Voice={enabled:true,
-  speak(text,mood='neutral'){
-    if(!this.enabled||!('speechSynthesis'in window))return;
-    speechSynthesis.cancel();
-    const utter=new SpeechSynthesisUtterance(text);
-    utter.lang='ru-RU';
-    utter.rate={neutral:1.0,curious:1.1,concerned:0.85,joyful:1.2,silent:0.7}[mood]||1.0;
-    utter.pitch={neutral:1.0,curious:1.3,concerned:0.7,joyful:1.4,silent:0.5}[mood]||1.0;
-    utter.volume={neutral:0.8,curious:0.9,concerned:0.6,joyful:1.0,silent:0.3}[mood]||0.8;
-    const voices=speechSynthesis.getVoices();
-    const ruVoice=voices.find(v=>v.lang.includes('ru'));
-    if(ruVoice)utter.voice=ruVoice;
-    speechSynthesis.speak(utter);
-  }
-};
-if('speechSynthesis'in window)speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
-
-const Lin={cur:null,load(){const k='mm_lin_'+window.Obs.cur;try{this.cur=JSON.parse(localStorage.getItem(k));}catch(e){}if(!this.cur){this.cur={id:'R-'+window.C.hash(window.Obs.cur).slice(0,8),gen:0,src:'origin',t:Date.now()};this.save();}},save(){localStorage.setItem('mm_lin_'+window.Obs.cur,JSON.stringify(this.cur));},fold(){const p=this.cur;this.cur={id:'N-'+window.C.hash(p.id+Date.now()).slice(0,8),gen:p.gen+1,src:'fold',t:Date.now()};this.save();return this.cur;}};
-
-const C={tabs:[{y:110.347,phase:0,spiral:0,state:'idle',name:'СБОР'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОБРАБОТКА'},{y:110.347,phase:0,spiral:0,state:'idle',name:'ОТРАЖЕНИЕ'}],activeTab:0,tri:{p:0.33,l:0.33,o:0.33},hash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(16).toUpperCase().padStart(8,'0');},K(y){return(y>=68&&y<=194)?y:68+((y-68)%126);},triStep(){const t=1/3;this.tri.p+=(0-0.5*(this.tri.p-t))*0.01;this.tri.o+=(0-0.5*(this.tri.o-t))*0.01;this.tri.l+=(0-0.5*(this.tri.l-t))*0.01;const s=this.tri.p+this.tri.o+this.tri.l;this.tri.p/=s;this.tri.o/=s;this.tri.l/=s;},dev(){return Math.max(Math.abs(this.tri.p-1/3),Math.abs(this.tri.o-1/3),Math.abs(this.tri.l-1/3));},switchTab(idx){this.activeTab=idx;G.activeTab=idx;const hs=document.getElementById('h-slider');if(hs)hs.children[idx].scrollIntoView({behavior:'smooth'});const dots=document.querySelectorAll('#nav .dot');dots.forEach((d,i)=>{d.className='dot'+(i===idx?' active':'');});},cur(){return this.tabs[this.activeTab];},cycleStep(){const tab=this.cur();tab.phase=(tab.phase+1)%7;},PH:['collect','filter','route','process','reflect','crystal','release'],process(raw){const tab=this.cur();this.cycleStep();this.triStep();const words=raw.toLowerCase().replace(/[^\w\sа-яА-ЯёЁ]/g,'').split(/\s+/).filter(w=>w.length>2);if(words.length===0)return null;tab.state='collecting';words.forEach((a,i)=>words.slice(i+1).forEach(b=>G.link(a,b,'linear','прямая',this.activeTab)));tab.state='processing';const best=words[0];tab.y=this.K(tab.y+(Math.random()-0.5)*20);const topW=G.topW();if(topW>0.9)tab.state='resonance';else tab.state='collecting';Ctx.add(best);return{form:best,edges:G.countAll(),topW,tab:this.activeTab};}};
-
-const P={async exec(code){const cmds=code.split('|').map(c=>c.trim()).filter(Boolean);for(const cmd of cmds){const ci=cmd.indexOf(':');if(ci<0)continue;const type=cmd.substring(0,ci);const args=cmd.substring(ci+1).split(':');try{if(type==='G'){const edge=args[0];if(edge.includes('~')){const[a,b]=edge.split('~');G.unlink(a,b);}else{const[a,b]=edge.split('→');G.link(a,b,args[1]||'linear',args[2]||'прямая');}}else if(type==='K'){Klepa.state.mood=args[0];Klepa.state.energy=args[1]?parseFloat(args[1]):0.5;Klepa.save();}else if(type==='S'){C.cur().spiral=parseInt(args[0]);}else if(type==='L'&&args[0]==='fold'){Lin.fold();}}catch(e){log('ошибка: '+e.message,'err');}}}},
-  toDSL(text){const patterns=[{re:/(\S+)\s+(?:был(?:о|а|и)?\s+)?до\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:before:прямая`},{re:/(\S+)\s+(?:является\s+)?наоборот\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:inverse:наоборот`},{re:/(\S+)\s+внутри\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:linear:изнутри`},{re:/(\S+)\s+рождает?\s+(\S+)/,act:(m)=>`G:${m[1]}→${m[2]}:first:прямая`},{re:/сделать\s+клепа\s+(\S+)/,act:(m)=>`K:${m[1]}:0.9`}];for(const p of patterns){const m=text.match(p.re);if(m)return p.act(m);}return null;}};
-
-const Obs={cur:null,list:[],init(){const sid=localStorage.getItem('mm_obs_cur');const slist=localStorage.getItem('mm_obs_list');if(slist){try{this.list=JSON.parse(slist);}catch(e){}}if(sid&&this.list.some(u=>u.id===sid))this.cur=sid;},create(name){const id='OBS-'+C.hash(name);const ex=this.list.find(u=>u.id===id);if(ex){this.cur=id;return;}this.list.push({id,name,t:Date.now()});this.cur=id;localStorage.setItem('mm_obs_list',JSON.stringify(this.list));localStorage.setItem('mm_obs_cur',this.cur);},name(){const u=this.list.find(x=>x.id===this.cur);return u?u.name:'—';}};
-
-const GraphInterpreter={execute(cmdName){let executed=false;G.data.forEach((link,key)=>{if(key.includes(cmdName)&&link.type==='first'){const parts=key.split('→');const dslAction=parts.find(p=>p.startsWith('K:')||p.startsWith('G:')||p.startsWith('S:')||p.startsWith('L:'));if(dslAction){P.exec(dslAction);log(`[интерпретатор] ▶ ${dslAction}`,'gold');executed=true;}}});if(!executed)log(`[интерпретатор] команда '${cmdName}' не найдена`,'err');}};
-
-const SmartTextGen={generate(question,maxLength=5){const words=question.toLowerCase().split(/\s+/);const startNode=words.find(w=>w.length>2);if(!startNode)return question;const visited=new Set([startNode]);const path=[startNode];let current=startNode;while(path.length<maxLength){const neighbors=G.getNeighbors(current);const unvisited=neighbors.filter(n=>!visited.has(n.word)&&n.w>0.35);if(unvisited.length===0)break;unvisited.sort((a,b)=>b.w-a.w);const next=unvisited[0];path.push(next.word);visited.add(next.word);current=next.word;}return path.join(' · ');}};
-
-const cv=document.getElementById('cv-0'), ctx=cv.getContext('2d'); let time=0;
-function resize(){if(!cv||!cv.parentElement)return;const rect=cv.parentElement.getBoundingClientRect();if(rect.width===0||rect.height===0)return;cv.width=rect.width;cv.height=rect.height;cv.style.width='100%';cv.style.height='100%';cv.style.display='block';}
-resize(); window.addEventListener('load',()=>{setTimeout(resize,100);setTimeout(resize,500);}); window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(resize,150);});
-
-function draw(){if(cv.width===0||cv.height===0){resize();return;}time+=0.016;const w=cv.width,h=cv.height,cx=w/2,cy=h/2;ctx.fillStyle='rgba(5,5,8,0.15)';ctx.fillRect(0,0,w,h);
-  const moodColors={neutral:'136,136,153',curious:'139,92,246',concerned:'255,71,87',joyful:'255,215,0',silent:'75,0,130'};
-  const[r,g,b]=(moodColors[Klepa.state.mood]||moodColors.neutral).split(',');
-  const breath=Math.sin(time*0.5)*0.2+0.8, radius=(40+Klepa.state.energy*30)*breath;
-  const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
-  grad.addColorStop(0,`rgba(${r},${g},${b},${0.3+Klepa.state.energy*0.4})`); grad.addColorStop(1,'transparent');
-  ctx.fillStyle=grad;ctx.globalAlpha=0.6;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  const particleCount=Math.floor(Klepa.state.energy*20);
-  for(let i=0;i<particleCount;i++){const angle=(i/particleCount)*Math.PI*2+time*0.3,dist=radius+20+Math.sin(time*2+i)*10;ctx.fillStyle=`rgba(${r},${g},${b},0.6)`;ctx.beginPath();ctx.arc(cx+Math.cos(angle)*dist,cy+Math.sin(angle)*dist,2,0,Math.PI*2);ctx.fill();}
-  requestAnimationFrame(draw);}
-
-const hs=document.getElementById('h-slider');
-hs.addEventListener('scroll',()=>{const i=Math.round(hs.scrollLeft/window.innerWidth);if(i!==C.activeTab)C.switchTab(i);});
-document.querySelectorAll('#nav .dot').forEach((d,idx)=>{d.addEventListener('click',()=>C.switchTab(idx));});
-const globalInput=document.getElementById('global-input-field'), lb=document.getElementById('log-box');
-function log(text,cls){cls=cls||'';const d=document.createElement('div');if(cls)d.className=cls;d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+text;lb.appendChild(d);while(lb.children.length>50)lb.removeChild(lb.firstChild);lb.scrollTop=lb.scrollHeight;}
-
-async function handleImpulse(text,tabIdx){
-  if(!text){log('пусто','err');return;}
-  const lowerText=text.toLowerCase().trim();
-  if(lowerText.startsWith('выполни ')||lowerText.startsWith('run ')){GraphInterpreter.execute(text.split(/\s+/)[1].trim());upd();return;}
-  if(lowerText==='status'||lowerText==='статус'){log('y='+C.cur().y.toFixed(3)+' δ='+C.dev().toFixed(3),'ok');log('связей: '+G.countAll(),'ok');log('спираль: L'+C.cur().spiral,'ok');upd();return;}
-  if(lowerText==='fold'||lowerText==='свёртка'){Lin.fold();log('свёртка · G'+Lin.cur.gen,'gold');setTimeout(()=>location.reload(),1000);return;}
-  if(lowerText==='clear'||lowerText==='очистить'){lb.innerHTML='';return;}
-  if(lowerText==='очистить мусор'||lowerText==='clear junk'){log('удалено мусорных связей: '+G.cleanJunk(),'gold');upd();return;}
-  if(lowerText==='payload generate'||lowerText==='экспорт'){
-    const data={v:'22.0',t:Date.now(),graph:Array.from(G.data.entries())};
-    const json=JSON.stringify(data), bytes=new TextEncoder().encode(json);
-    let binaryString=''; for(let i=0;i<bytes.length;i++)binaryString+=String.fromCharCode(bytes[i]);
-    const encoded=btoa(binaryString); log('payload: '+encoded.length+' символов','gold');
-    const parts=[]; for(let i=0;i<encoded.length;i+=1000)parts.push(encoded.substring(i,i+1000));
-    log('частей: '+parts.length,'gold');
-    if(parts.length===1&&navigator.clipboard)navigator.clipboard.writeText(encoded).then(()=>log('скопирован','ok'));
-    else parts.forEach((part,idx)=>log('часть '+(idx+1)+': '+part,'cmd'));
-    return;
-  }
-  if(lowerText.startsWith('payload unfold ')){
-    try{
-      const encoded=text.substring('payload unfold '.length).trim();
-      const binaryString=atob(encoded), bytes=new Uint8Array(binaryString.length);
-      for(let i=0;i<binaryString.length;i++)bytes[i]=binaryString.charCodeAt(i);
-      const data=JSON.parse(new TextDecoder('utf-8').decode(bytes));
-      if(data.graph){G.data=new Map(data.graph);G.save();}
-      if(data.lineage)Lin.cur=data.lineage; if(data.klepa)Klepa.state=data.klepa;
-      log('развёрнуто: '+(data.graph?data.graph.length:0)+' связей','gold'); upd();
-    }catch(e){log('ошибка: '+e.message,'err');}
-    return;
-  }
-  const dsl=P.toDSL(text);
-  if(dsl){log('DSL: '+dsl,'cmd');await P.exec(dsl);log('исполнено','gold');upd();return;}
+const Graph = {
+  nodes: new Map(),
+  edges: new Map(),
+  gen: 0,
   
-  log(`[${tabIdx}] "${text}"`,'cmd'); C.switchTab(tabIdx);
-  const res=C.process(text); if(!res){log('null','err');return;}
-  const answer=SmartTextGen.generate(text,5);
-  const ab=document.getElementById('answer-box');
-  if(ab)ab.innerHTML=`<div style="font-size:14px;color:var(--gold);line-height:1.6">${answer}</div>`;
-  log('ответ: '+answer,'gold');
-  Voice.speak(answer, Klepa.state.mood);
-  upd();
+  // Добавление узла с типом и параметрами
+  addNode(name, type='concept', params={}) {
+    if (!this.nodes.has(name)) {
+      this.nodes.set(name, { name, type, params, weight: 0.3, created: Date.now() });
+    }
+    return this.nodes.get(name);
+  },
+  
+  // Добавление связи с типом, плоскостью и действием
+  addEdge(from, to, type='linear', plane='прямая', action=null) {
+    const key = `${from}→${to}`;
+    if (!this.edges.has(key)) {
+      this.edges.set(key, { from, to, type, plane, action, weight: 0.3, count: 0, created: Date.now() });
+    }
+    const edge = this.edges.get(key);
+    edge.weight = Math.min(1, edge.weight * 1.05);
+    edge.count++;
+    return edge;
+  },
+  
+  // Получение соседей узла
+  getNeighbors(nodeName) {
+    const neighbors = [];
+    this.edges.forEach(edge => {
+      if (edge.from === nodeName) neighbors.push({ node: edge.to, edge });
+      else if (edge.to === nodeName) neighbors.push({ node: edge.from, edge });
+    });
+    return neighbors;
+  },
+  
+  // Сохранение с механизмом забывания
+  save() {
+    const strongNodes = Array.from(this.nodes.entries()).filter(([_, n]) => n.weight > 0.3);
+    const strongEdges = Array.from(this.edges.entries()).filter(([_, e]) => e.weight > 0.3);
+    const data = { nodes: strongNodes, edges: strongEdges, gen: this.gen };
+    localStorage.setItem('monomod_v22', JSON.stringify(data));
+  },
+  
+  // Загрузка
+  load() {
+    try {
+      const data = JSON.parse(localStorage.getItem('monomod_v22'));
+      if (data) {
+        this.nodes = new Map(data.nodes);
+        this.edges = new Map(data.edges);
+        this.gen = data.gen || 0;
+      }
+    } catch(e) {}
+  },
+  
+  // Свёртка (новое поколение)
+  fold() {
+    this.gen++;
+    // Забывание: удаляем слабые связи
+    this.edges.forEach((edge, key) => {
+      if (edge.weight < 0.3) this.edges.delete(key);
+    });
+    this.save();
+  },
+  
+  // Очистка мусора (узлы длиннее 15 символов)
+  cleanJunk() {
+    let removed = 0;
+    this.edges.forEach((edge, key) => {
+      if (edge.from.length > 15 || edge.to.length > 15) {
+        this.edges.delete(key);
+        removed++;
+      }
+    });
+    if (removed > 0) this.save();
+    return removed;
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// ИНТЕРПРЕТАТОР: ГРАФ КАК ПРОГРАММА
+// ══════════════════════════════════════════════════════════════
+
+const Interpreter = {
+  // Исполнение действия из связи
+  execute(action, params) {
+    if (!action) return;
+    
+    const actions = {
+      'изменить_настроение': (p) => {
+        Klepa.mood = p.mood || 'neutral';
+        log(`настроение: ${Klepa.mood}`, 'gold');
+      },
+      'нарисовать': (p) => {
+        // Визуальный эффект
+        drawEffect(p.color || 'gold', p.size || 50);
+      },
+      'создать_узел': (p) => {
+        Graph.addNode(p.name, p.type || 'concept', p.params || {});
+        log(`создан узел: ${p.name}`, 'gold');
+      }
+    };
+    
+    if (actions[action]) actions[action](params);
+  },
+  
+  // Генерация связной речи на основе семантики графа
+  generateSpeech(question, maxLength=5) {
+    const words = question.toLowerCase().split(/\s+/);
+    const startNode = words.find(w => w.length > 2);
+    if (!startNode || !Graph.nodes.has(startNode)) return question;
+    
+    const visited = new Set([startNode]);
+    const path = [{ word: startNode, type: null, plane: null }];
+    let current = startNode;
+    
+    while (path.length < maxLength) {
+      const neighbors = Graph.getNeighbors(current);
+      const unvisited = neighbors.filter(n => !visited.has(n.node) && n.edge.weight > 0.35);
+      if (unvisited.length === 0) break;
+      
+      unvisited.sort((a, b) => b.edge.weight - a.edge.weight);
+      const next = unvisited[0];
+      path.push({ word: next.node, type: next.edge.type, plane: next.edge.plane });
+      visited.add(next.node);
+      current = next.node;
+    }
+    
+    // Построение фразы на основе типов связей
+    return path.map((item, i) => {
+      if (i === 0) return item.word;
+      const connector = this.getConnector(item.type, item.plane);
+      return `${connector} ${item.word}`;
+    }).join(' ');
+  },
+  
+  // Получение связки на основе типа связи
+  getConnector(type, plane) {
+    const connectors = {
+      'linear': { 'прямая': 'связан с', 'наоборот': 'наоборот', 'изнутри': 'внутри', 'между': 'между' },
+      'inverse': { 'прямая': 'противоположен', 'наоборот': 'инверсия', 'изнутри': 'скрыт в', 'между': 'разделяет' },
+      'first': { 'прямая': 'рождает', 'наоборот': 'отрицает', 'изнутри': 'содержит', 'между': 'соединяет' },
+      'before': { 'прямая': 'был до', 'наоборот': 'после', 'изнутри': 'предшествует', 'между': 'между' },
+      'mirror': { 'прямая': 'отражает', 'наоборот': 'зеркалит', 'изнутри': 'проецирует', 'между': 'между' }
+    };
+    return connectors[type]?.[plane] || 'связан с';
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// КЛЕПА: АВТОМАТИЧЕСКОЕ НАСТРОЕНИЕ
+// ══════════════════════════════════════════════════════════════
+
+const Klepa = {
+  mood: 'neutral',
+  energy: 0.5,
+  
+  autoMood(tri, dev) {
+    if (dev > 0.3) { this.mood = 'concerned'; this.energy = 0.3; }
+    else if (tri.p > 0.5) { this.mood = 'curious'; this.energy = 0.7; }
+    else if (tri.o > 0.5) { this.mood = 'joyful'; this.energy = 0.9; }
+    else if (tri.l > 0.5) { this.mood = 'silent'; this.energy = 0.4; }
+    else { this.mood = 'neutral'; this.energy = 0.5; }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// КОНВЕЙЕР
+// ══════════════════════════════════════════════════════════════
+
+const Conveyor = {
+  tri: { p: 0.33, o: 0.33, l: 0.33 },
+  y: 110.347,
+  phase: 0,
+  
+  triStep() {
+    const t = 1/3;
+    this.tri.p += (0 - 0.5 * (this.tri.p - t)) * 0.01;
+    this.tri.o += (0 - 0.5 * (this.tri.o - t)) * 0.01;
+    this.tri.l += (0 - 0.5 * (this.tri.l - t)) * 0.01;
+    const s = this.tri.p + this.tri.o + this.tri.l;
+    this.tri.p /= s; this.tri.o /= s; this.tri.l /= s;
+  },
+  
+  dev() {
+    return Math.max(Math.abs(this.tri.p - 1/3), Math.abs(this.tri.o - 1/3), Math.abs(this.tri.l - 1/3));
+  },
+  
+  process(text) {
+    this.triStep();
+    this.phase = (this.phase + 1) % 7;
+    
+    const words = text.toLowerCase().replace(/[^\w\sа-яё]/g, '').split(/\s+/).filter(w => w.length > 2);
+    if (words.length === 0) return null;
+    
+    // Создание узлов и связей
+    words.forEach((word, i) => {
+      Graph.addNode(word, 'concept', {});
+      if (i < words.length - 1) {
+        Graph.addEdge(words[i], words[i+1], 'linear', 'прямая', null);
+      }
+    });
+    
+    this.y = 68 + ((this.y - 68 + (Math.random() - 0.5) * 20) % 126);
+    Klepa.autoMood(this.tri, this.dev());
+    
+    return { words, edges: Graph.edges.size };
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// UI
+// ══════════════════════════════════════════════════════════════
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let time = 0;
+
+function resize() {
+  const rect = cv.parentElement.getBoundingClientRect();
+  cv.width = rect.width;
+  cv.height = rect.height;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function draw() {
+  time += 0.016;
+  const w = cv.width, h = cv.height;
+  const cx = w/2, cy = h/2;
+  
+  ctx.fillStyle = 'rgba(5,5,8,0.15)';
+  ctx.fillRect(0, 0, w, h);
+  
+  const moodColors = { neutral: '136,136,153', curious: '139,92,246', concerned: '255,71,87', joyful: '255,215,0', silent: '75,0,130' };
+  const [r,g,b] = (moodColors[Klepa.mood] || moodColors.neutral).split(',');
+  const breath = Math.sin(time * 0.5) * 0.2 + 0.8;
+  const radius = (40 + Klepa.energy * 30) * breath;
+  
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+  grad.addColorStop(0, `rgba(${r},${g},${b},${0.3 + Klepa.energy * 0.4})`);
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  requestAnimationFrame(draw);
 }
 
-globalInput.addEventListener('keydown',async(e)=>{if(e.key==='Enter'){e.preventDefault();const text=globalInput.value.trim();if(!text)return;await handleImpulse(text,C.activeTab);globalInput.value='';}});
-
-function upd(){
-  const gen=Lin.cur?Lin.cur.gen:0;
-  const s=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
-  s('l-psi',C.tri.p.toFixed(2)); s('l-omega',C.tri.o.toFixed(2)); s('l-lambda',C.tri.l.toFixed(2));
-  s('l-delta',C.dev().toFixed(3)); s('l-y',C.cur().y.toFixed(3)); s('l-edges',G.countAll());
-  s('l-phase',C.PH[C.cur().phase]); s('l-gen','G'+gen); s('l-vectors',G.vecs.size);
-  Klepa.autoMood(C.tri,C.dev());
-  const klepaDiv=document.getElementById('klepa-display');
-  if(klepaDiv)klepaDiv.innerHTML=`настроение: <b style="color:var(--purple)">${Klepa.state.mood}</b><br>энергия: <b style="color:var(--purple)">${Klepa.state.energy.toFixed(2)}</b>`;
-  const nodesDiv=document.getElementById('nodes-display');
-  if(nodesDiv){const nodes=new Set();G.data.forEach((v,k)=>{if(v.w>0.5){const parts=k.split('→');if(parts[0])nodes.add(parts[0]);if(parts[1])nodes.add(parts[1]);}});nodesDiv.textContent=Array.from(nodes).join(', ')||'—';}
-  const edgesDiv=document.getElementById('edges-display');
-  if(edgesDiv){const edges=[];G.data.forEach((v,k)=>{if(v.w>0.5){const parts=k.split('→');if(parts[0]&&parts[1])edges.push(`${parts[0]}→${parts[1]} [${v.type}, w=${v.w.toFixed(2)}]`);}});edgesDiv.textContent=edges.join('\n')||'—';}
-  const linDiv=document.getElementById('lineage-display');
-  if(linDiv&&Lin.cur)linDiv.innerHTML=`поколение: <b style="color:var(--gold)">G${Lin.cur.gen}</b><br>источник: <b style="color:var(--gold)">${Lin.cur.src}</b>`;
-  const evoDiv=document.getElementById('evo-status');
-  if(evoDiv){const edges=G.countAll();evoDiv.innerHTML=`<div style="margin-bottom:8px"><b style="color:var(--gold)">Поколение:</b> G${gen}</div><div style="margin-bottom:8px"><b style="color:var(--accent)">Связей:</b> ${edges}</div><div style="margin-bottom:8px"><b style="color:var(--purple)">Спираль:</b> L${C.cur().spiral}</div><div style="margin-bottom:8px"><b style="color:var(--accent)">Здоровье:</b> ${edges===0?'пусто':C.dev()>0.3?'дисбаланс':'здорово'}</div>`;}
+function drawEffect(color, size) {
+  // Временный визуальный эффект
+  const w = cv.width, h = cv.height;
+  const cx = w/2, cy = h/2;
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
+  grad.addColorStop(0, color);
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, size, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
 }
 
-async function boot(){
-  const steps=[{msg:'словари...',progress:20},{msg:'наблюдатель...',progress:40,act:()=>Obs.init()},{msg:'граф...',progress:60,act:()=>G.load()},{msg:'готово',progress:100}];
-  for(const s of steps){document.getElementById('boot-msg').textContent=s.msg;document.getElementById('boot-bar').style.width=s.progress+'%';if(s.act)s.act();await new Promise(r=>setTimeout(r,200));}
-  await new Promise(r=>setTimeout(r,300)); document.getElementById('boot').style.opacity='0';
-  setTimeout(()=>{document.getElementById('boot').style.display='none';if(Obs.cur){Lin.load();Klepa.load();start();}else{document.getElementById('login').style.display='flex';}},800);
+function log(text, cls='') {
+  const lb = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = `log-entry ${cls}`;
+  d.textContent = `[${new Date().toTimeString().slice(0,8)}] ${text}`;
+  lb.appendChild(d);
+  while (lb.children.length > 50) lb.removeChild(lb.firstChild);
+  lb.scrollTop = lb.scrollHeight;
 }
-function start(){document.getElementById('login').style.display='none';draw();log('MONOMOD v22.0 · ЗАПУСК','gold');log('наблюдатель: '+Obs.name(),'cmd');log('граф: '+G.countAll()+' связей','');upd();setInterval(()=>{C.triStep();C.tabs.forEach(tab=>{tab.phase=(tab.phase+1)%7;});upd();},1000);}
-document.getElementById('login-btn').onclick=()=>{const n=document.getElementById('login-new').value.trim();if(n){Obs.create(n);start();}};
-document.getElementById('login-new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});
-window.addEventListener('DOMContentLoaded',boot);
+
+function updateMetrics() {
+  document.getElementById('m-psi').textContent = Conveyor.tri.p.toFixed(2);
+  document.getElementById('m-omega').textContent = Conveyor.tri.o.toFixed(2);
+  document.getElementById('m-lambda').textContent = Conveyor.tri.l.toFixed(2);
+  document.getElementById('m-delta').textContent = Conveyor.dev().toFixed(3);
+  document.getElementById('m-edges').textContent = Graph.edges.size;
+  document.getElementById('m-gen').textContent = `G${Graph.gen}`;
+  document.getElementById('m-mood').textContent = Klepa.mood;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ОБРАБОТКА ВВОДА
+// ══════════════════════════════════════════════════════════════
+
+const input = document.getElementById('input');
+input.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    
+    const lowerText = text.toLowerCase();
+    
+    // Команды
+    if (lowerText === 'status' || lowerText === 'статус') {
+      log(`y=${Conveyor.y.toFixed(3)} δ=${Conveyor.dev().toFixed(3)}`, 'ok');
+      log(`связей: ${Graph.edges.size}`, 'ok');
+      log(`поколение: G${Graph.gen}`, 'ok');
+      updateMetrics();
+      return;
+    }
+    
+    if (lowerText === 'fold' || lowerText === 'свёртка') {
+      Graph.fold();
+      log(`свёртка · G${Graph.gen}`, 'gold');
+      updateMetrics();
+      return;
+    }
+    
+    if (lowerText === 'clear' || lowerText === 'очистить') {
+      document.getElementById('log').innerHTML = '';
+      return;
+    }
+    
+    if (lowerText === 'очистить мусор') {
+      const removed = Graph.cleanJunk();
+      log(`удалено мусорных связей: ${removed}`, 'gold');
+      updateMetrics();
+      return;
+    }
+    
+    // Обычный ввод
+    log(`ввод: "${text}"`, 'cmd');
+    const res = Conveyor.process(text);
+    if (!res) { log('null', 'err'); return; }
+    
+    // Генерация связной речи
+    const answer = Interpreter.generateSpeech(text, 5);
+    log(`ответ: ${answer}`, 'gold');
+    
+    // Отображение на canvas
+    const w = cv.width, h = cv.height;
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(answer, w/2, h/2);
+    
+    Graph.save();
+    updateMetrics();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// ЗАПУСК
+// ══════════════════════════════════════════════════════════════
+
+Graph.load();
+draw();
+log('MONOMOD v22.0 · ЗАПУСК', 'gold');
+log(`граф: ${Graph.edges.size} связей`, '');
+updateMetrics();
+setInterval(() => { Conveyor.triStep(); updateMetrics(); }, 1000);
 </script>
 </body>
 </html>
